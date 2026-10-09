@@ -69,6 +69,14 @@ class AquariumManagerCard extends HTMLElement {
     return this._entity(key, domain, suffix);
   }
 
+  _selectEntity(key) {
+    const map = {
+      backup_heater_mode: ["select", "backup_heater_mode"],
+    };
+    const [domain, suffix] = map[key];
+    return this._entity(key, domain, suffix);
+  }
+
   _numberEntity(key) {
     const map = {
       ammonia: ["number", "ammonia"], nitrite: ["number", "nitrite"], nitrate: ["number", "nitrate"],
@@ -114,7 +122,7 @@ class AquariumManagerCard extends HTMLElement {
         .empty{padding:16px;text-align:center;font-size:12px;color:var(--secondary-text-color)}
         .parameter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.source-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.delta-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.parameter,.delta{border:1px solid var(--divider-color);border-radius:10px;padding:10px;background:var(--secondary-background-color)}.delta{background:transparent}.param-head{display:flex;justify-content:space-between;gap:8px;margin-bottom:5px}.param-name,.delta-label{font-size:11px;color:var(--secondary-text-color)}.param-unit{font-size:9px;color:var(--secondary-text-color)}.delta-value{font-size:15px;font-weight:650;margin-top:4px}
         input,textarea,select{box-sizing:border-box;width:100%;max-width:100%;min-width:0;font:inherit;color:var(--primary-text-color);background:transparent;border:1px solid var(--divider-color);border-radius:8px;padding:8px;outline:none}input:focus,textarea:focus,select:focus{border-color:var(--primary-color)}button{max-width:100%}.parameter input{border:0;border-bottom:1px solid var(--divider-color);border-radius:0;padding:3px 0;font-size:18px;font-weight:650}.source-grid .parameter input{font-size:16px}
-        .equipment-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--divider-color);border-radius:11px}.equipment-main{min-width:0}.equipment-name{font-size:14px;font-weight:650}.equipment-sub{font-size:11px;color:var(--secondary-text-color);margin-top:3px}.heater-auto{margin-top:7px;font-size:11px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}.heater-pill{border:1px solid var(--divider-color);border-radius:999px;padding:3px 7px;background:var(--secondary-background-color)}.equipment-toggle{border:1px solid var(--divider-color);background:var(--secondary-background-color);color:var(--primary-text-color);border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:650}.equipment-toggle.on{color:var(--success-color,#43a047);border-color:color-mix(in srgb,var(--success-color,#43a047) 50%,var(--divider-color))}.lighting-panel{margin-top:10px;border:1px solid var(--divider-color);border-radius:11px;padding:12px}.lighting-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.lighting-state{font-weight:700;text-transform:capitalize}.lighting-reason{font-size:11px;color:var(--secondary-text-color);margin-top:3px}.lighting-devices{font-size:11px;color:var(--secondary-text-color);margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}.device-dot{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:999px;background:var(--secondary-background-color)}.device-dot.on{color:var(--success-color,#43a047)}.schedule-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}.schedule-item{border:1px solid var(--divider-color);border-radius:9px;padding:8px}.schedule-label{font-size:9px;text-transform:uppercase;color:var(--secondary-text-color)}.schedule-value{font-size:13px;font-weight:650;margin-top:3px}.lighting-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.lighting-actions button{border:1px solid var(--divider-color);background:var(--secondary-background-color);color:var(--primary-text-color);border-radius:9px;padding:8px 10px;cursor:pointer}.lighting-actions button.active{color:var(--error-color);border-color:color-mix(in srgb,var(--error-color) 45%,var(--divider-color))}.lighting-editor{margin-top:12px;padding-top:12px;border-top:1px solid var(--divider-color)}.lighting-editor-title{font-size:12px;font-weight:700;margin-bottom:8px}.lighting-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.lighting-enabled{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:11px}.lighting-enabled input{width:auto}.lighting-field label{display:block;font-size:10px;color:var(--secondary-text-color);margin:0 0 4px}.lighting-field input{font-size:13px;padding:8px}.lighting-preview{margin-top:9px;padding:9px;border-radius:9px;background:var(--secondary-background-color);font-size:10px;line-height:1.5;color:var(--secondary-text-color)}.lighting-save-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}.lighting-save-message{font-size:10px;color:var(--secondary-text-color)}.lighting-save{background:var(--primary-color);color:var(--text-primary-color,#fff);border:0;font-weight:700;padding:8px 12px}.reading-submit{border:1px solid var(--divider-color);border-radius:12px;padding:13px}.reading-submit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.reading-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}.reading-submit-btn{border:0;border-radius:9px;background:var(--primary-color);color:var(--text-primary-color,#fff);padding:9px 14px;font-weight:700;cursor:pointer}.reading-submit-btn:disabled{opacity:.55;cursor:default}.reading-message{font-size:11px;color:var(--secondary-text-color)}.water-warning{display:none;margin-top:10px;padding:9px 10px;border-radius:9px;font-size:12px;background:color-mix(in srgb,var(--warning-color,#f9a825) 10%,transparent)}.water-warning.show{display:block}
+        .equipment-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--divider-color);border-radius:11px}.equipment-main{min-width:0}.equipment-name{font-size:14px;font-weight:650}.equipment-sub{font-size:11px;color:var(--secondary-text-color);margin-top:3px}.heater-auto{margin-top:7px;font-size:11px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}.heater-pill{border:1px solid var(--divider-color);border-radius:999px;padding:3px 7px;background:var(--secondary-background-color)}.equipment-toggle{border:1px solid var(--divider-color);background:var(--secondary-background-color);color:var(--primary-text-color);border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:650}.equipment-toggle.on{color:var(--success-color,#43a047);border-color:color-mix(in srgb,var(--success-color,#43a047) 50%,var(--divider-color))}.heater-mode-toggle{display:grid;grid-template-columns:1fr 1fr;min-width:150px;border:1px solid var(--divider-color);border-radius:10px;padding:3px;background:var(--secondary-background-color);gap:3px}.heater-mode-btn{border:0;background:transparent;color:var(--secondary-text-color);border-radius:7px;min-height:38px;padding:7px 13px;font-weight:700;cursor:pointer}.heater-mode-btn.active{background:var(--primary-color);color:var(--text-primary-color,#fff)}.heater-mode-btn:disabled{opacity:.5;cursor:default}.lighting-panel{margin-top:10px;border:1px solid var(--divider-color);border-radius:11px;padding:12px}.lighting-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.lighting-state{font-weight:700;text-transform:capitalize}.lighting-reason{font-size:11px;color:var(--secondary-text-color);margin-top:3px}.lighting-devices{font-size:11px;color:var(--secondary-text-color);margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}.device-dot{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:999px;background:var(--secondary-background-color)}.device-dot.on{color:var(--success-color,#43a047)}.schedule-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}.schedule-item{border:1px solid var(--divider-color);border-radius:9px;padding:8px}.schedule-label{font-size:9px;text-transform:uppercase;color:var(--secondary-text-color)}.schedule-value{font-size:13px;font-weight:650;margin-top:3px}.lighting-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.lighting-actions button{border:1px solid var(--divider-color);background:var(--secondary-background-color);color:var(--primary-text-color);border-radius:9px;padding:8px 10px;cursor:pointer}.lighting-actions button.active{color:var(--error-color);border-color:color-mix(in srgb,var(--error-color) 45%,var(--divider-color))}.lighting-editor{margin-top:12px;padding-top:12px;border-top:1px solid var(--divider-color)}.lighting-editor-title{font-size:12px;font-weight:700;margin-bottom:8px}.lighting-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.lighting-enabled{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:11px}.lighting-enabled input{width:auto}.lighting-field label{display:block;font-size:10px;color:var(--secondary-text-color);margin:0 0 4px}.lighting-field input{font-size:13px;padding:8px}.lighting-preview{margin-top:9px;padding:9px;border-radius:9px;background:var(--secondary-background-color);font-size:10px;line-height:1.5;color:var(--secondary-text-color)}.lighting-save-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}.lighting-save-message{font-size:10px;color:var(--secondary-text-color)}.lighting-save{background:var(--primary-color);color:var(--text-primary-color,#fff);border:0;font-weight:700;padding:8px 12px}.reading-submit{border:1px solid var(--divider-color);border-radius:12px;padding:13px}.reading-submit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.reading-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}.reading-submit-btn{border:0;border-radius:9px;background:var(--primary-color);color:var(--text-primary-color,#fff);padding:9px 14px;font-weight:700;cursor:pointer}.reading-submit-btn:disabled{opacity:.55;cursor:default}.reading-message{font-size:11px;color:var(--secondary-text-color)}.water-warning{display:none;margin-top:10px;padding:9px 10px;border-radius:9px;font-size:12px;background:color-mix(in srgb,var(--warning-color,#f9a825) 10%,transparent)}.water-warning.show{display:block}
         .species-search{display:flex;gap:8px;align-items:center}.species-search input{flex:1}.species-search button{padding:9px 13px;font-weight:700}.species-result{margin-top:14px}.species-preview{border:1px solid var(--divider-color);border-radius:12px;padding:13px}.species-preview-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.source-pills{display:flex;gap:6px;flex-wrap:wrap}.source-pill{font-size:10px;font-weight:700;border-radius:999px;padding:4px 7px;background:var(--secondary-background-color)}.source-pill.found{color:var(--success-color,#43a047)}.species-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.species-form .full{grid-column:1/-1}.species-form label{display:block;font-size:10px;color:var(--secondary-text-color);margin-bottom:4px}.species-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:13px}.species-message{font-size:11px;color:var(--secondary-text-color);margin-top:9px}.species-message.error{color:var(--error-color)}
         .modal-backdrop{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.48);display:none;align-items:center;justify-content:center;padding:16px}.modal-backdrop.open{display:flex}.modal{width:min(620px,100%);max-height:min(780px,92vh);overflow:auto;background:var(--card-background-color);border-radius:16px;box-shadow:0 16px 50px rgba(0,0,0,.35)}
         .modal-head{position:sticky;top:0;background:var(--card-background-color);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:17px 18px 12px;border-bottom:1px solid var(--divider-color);z-index:1}.modal-title{font-size:18px;font-weight:700}.modal-subtitle{font-size:12px;color:var(--secondary-text-color);font-style:italic;margin-top:3px}.icon-btn{padding:5px;display:grid;place-items:center;background:transparent}.icon-btn ha-icon{--mdc-icon-size:20px}.modal-body{padding:16px 18px 18px}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.detail{border:1px solid var(--divider-color);border-radius:10px;padding:10px}.detail-label{font-size:10px;text-transform:uppercase;color:var(--secondary-text-color)}.detail-value{font-size:13px;font-weight:600;margin-top:4px}.modal-section{margin-top:16px}.modal-section-title{font-size:12px;font-weight:700;margin-bottom:8px}.care-note{font-size:12px;line-height:1.4;padding:8px 10px;background:var(--secondary-background-color);border-radius:8px;margin-top:5px}.modal-actions{justify-content:flex-end;gap:8px;margin-top:18px}.primary{background:var(--primary-color);color:var(--text-primary-color,#fff);border-color:var(--primary-color);font-weight:650}.danger-btn{color:var(--error-color);margin-right:auto}
@@ -139,7 +147,7 @@ class AquariumManagerCard extends HTMLElement {
           .compat-row,.group-card{grid-template-columns:1fr}.compat-side{justify-content:space-between;flex-wrap:wrap}.compat-add{min-height:40px}.group-card .add-count{justify-self:start}
           .stock-row{grid-template-columns:minmax(0,1fr) auto}.stock-row .stock-meta{justify-self:end}.stock-row .edit-btn{grid-column:1/-1;width:100%;min-height:40px}.stock-name strong{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
           details.stock-panel summary{align-items:flex-start}.stock-meta{flex-wrap:wrap;justify-content:flex-end;text-align:right}.library-bar{align-items:flex-start;flex-wrap:wrap}.library-info{white-space:normal;overflow-wrap:anywhere;flex:1 1 180px}.library-refresh{min-height:40px}
-          .equipment-row{align-items:flex-start;flex-wrap:wrap}.equipment-toggle{width:100%;min-height:44px}.lighting-actions{display:grid;grid-template-columns:1fr}.lighting-actions button,.lighting-save,.reading-submit-btn{width:100%;min-height:44px}
+          .equipment-row{align-items:flex-start;flex-wrap:wrap}.equipment-toggle,.heater-mode-toggle{width:100%;min-height:44px}.lighting-actions{display:grid;grid-template-columns:1fr}.lighting-actions button,.lighting-save,.reading-submit-btn{width:100%;min-height:44px}
           .reading-actions,.lighting-save-row{display:grid;grid-template-columns:1fr}.reading-submit-btn,.lighting-save{grid-row:auto}.reading-message,.lighting-save-message{min-width:0}
           input,textarea,select{font-size:16px}.lighting-field input{font-size:16px}.parameter input{font-size:18px}
           .species-actions,.modal-actions{display:grid;grid-template-columns:1fr;width:100%}.species-actions button,.modal-actions button{width:100%;min-height:44px}.danger-btn{margin-right:0}
@@ -226,7 +234,7 @@ class AquariumManagerCard extends HTMLElement {
 
           <div id="tab_equipment" class="tab-page" role="tabpanel">
             <section class="section"><div class="section-title"><ha-icon icon="mdi:radiator"></ha-icon>Backup heater</div>
-              <div id="backup_heater_row" class="equipment-row"><div class="equipment-main"><div class="equipment-name">Backup heater</div><div id="backup_heater_sub" class="equipment-sub">Not configured</div><div id="backup_heater_auto" class="heater-auto"></div></div><button id="backup_heater_toggle" class="equipment-toggle" disabled>—</button></div>
+              <div id="backup_heater_row" class="equipment-row"><div class="equipment-main"><div class="equipment-name">Backup heater</div><div id="backup_heater_sub" class="equipment-sub">Not configured</div><div id="backup_heater_details" class="heater-auto"></div></div><div class="heater-mode-toggle" aria-label="Backup heater mode"><button id="backup_heater_mode_auto" type="button" class="heater-mode-btn" disabled>Auto</button><button id="backup_heater_mode_off" type="button" class="heater-mode-btn" disabled>Off</button></div></div>
             </section>
             <section class="section"><div class="section-title"><ha-icon icon="mdi:lightbulb-on-outline"></ha-icon>Lighting & CO₂</div>
               <div id="lighting_panel" class="lighting-panel" style="margin-top:0">
@@ -285,7 +293,8 @@ class AquariumManagerCard extends HTMLElement {
     });
     this.shadowRoot.getElementById("add_fish").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); this._openEdit(null); });
     this.shadowRoot.getElementById("refresh_library").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); this._refreshLibrary(); });
-    this.shadowRoot.getElementById("backup_heater_toggle").addEventListener("click", () => this._toggleBackupHeater());
+    this.shadowRoot.getElementById("backup_heater_mode_auto").addEventListener("click", () => this._setBackupHeaterMode("Auto"));
+    this.shadowRoot.getElementById("backup_heater_mode_off").addEventListener("click", () => this._setBackupHeaterMode("Off"));
     this.shadowRoot.getElementById("lights_off_today").addEventListener("click", () => this._toggleLightsOffToday());
     this.shadowRoot.getElementById("resync_lighting").addEventListener("click", () => this._resyncLighting());
     this.shadowRoot.getElementById("lighting_save").addEventListener("click", () => this._saveLightingSchedule());
@@ -342,32 +351,42 @@ class AquariumManagerCard extends HTMLElement {
 
 
   _renderBackupHeater() {
-    const entityId = this._switchEntity("backup_heater");
-    const state = this._state(entityId);
-    const button = this.shadowRoot.getElementById("backup_heater_toggle");
+    const heaterEntityId = this._switchEntity("backup_heater");
+    const modeEntityId = this._selectEntity("backup_heater_mode");
+    const heater = this._state(heaterEntityId);
+    const modeState = this._state(modeEntityId);
+    const autoButton = this.shadowRoot.getElementById("backup_heater_mode_auto");
+    const offButton = this.shadowRoot.getElementById("backup_heater_mode_off");
     const sub = this.shadowRoot.getElementById("backup_heater_sub");
-    const auto = this.shadowRoot.getElementById("backup_heater_auto");
+    const details = this.shadowRoot.getElementById("backup_heater_details");
     const automation = this._state(this._sensorEntity("heater_automation"));
 
-    if (!state) {
-      button.disabled = true;
-      button.textContent = "—";
-      button.classList.remove("on");
+    if (!heater) {
+      autoButton.disabled = true;
+      offButton.disabled = true;
+      autoButton.classList.remove("active");
+      offButton.classList.remove("active");
       sub.textContent = "Not configured — select a switch in Aquarium Manager → Configure";
-      auto.innerHTML = "";
+      details.innerHTML = "";
       return;
     }
 
-    const isOn = state.state === "on";
-    const unavailable = ["unknown", "unavailable"].includes(state.state);
-    const autoEnabled = automation?.attributes?.enabled === true;
-    button.disabled = unavailable || autoEnabled;
-    button.textContent = unavailable ? "Unavailable" : autoEnabled ? (isOn ? "AUTO · ON" : "AUTO · OFF") : (isOn ? "ON" : "OFF");
-    button.classList.toggle("on", isOn);
-    sub.textContent = autoEnabled ? "Managed automatically — disable automation in Configure for manual control" : `Manual control · ${state.attributes?.source_entity || entityId}`;
+    const heaterUnavailable = ["unknown", "unavailable"].includes(heater.state);
+    const heaterOn = heater.state === "on";
+    const inferredMode = automation?.attributes?.enabled === true ? "Auto" : "Off";
+    const mode = modeState && !["unknown", "unavailable"].includes(modeState.state) ? modeState.state : inferredMode;
+    const modeAvailable = !!modeState && !["unknown", "unavailable"].includes(modeState.state);
+
+    autoButton.disabled = !modeAvailable;
+    offButton.disabled = !modeAvailable;
+    autoButton.classList.toggle("active", mode === "Auto");
+    offButton.classList.toggle("active", mode === "Off");
+    sub.textContent = heaterUnavailable
+      ? "Heater plug unavailable"
+      : `${mode} mode · heater plug currently ${heaterOn ? "ON" : "OFF"}`;
 
     if (!automation) {
-      auto.innerHTML = "";
+      details.innerHTML = modeAvailable ? "" : `<span>Restart Home Assistant after upgrading to use the Auto / Off control.</span>`;
       return;
     }
     const a = automation.attributes || {};
@@ -375,7 +394,22 @@ class AquariumManagerCard extends HTMLElement {
     const temp = Number.isFinite(Number(a.current_temperature_c)) ? `${Number(a.current_temperature_c).toFixed(1)} °C` : "temperature —";
     const thresholds = Number.isFinite(Number(a.on_below_c)) && Number.isFinite(Number(a.off_at_c)) ? `${a.on_below_c}→${a.off_at_c} °C` : "";
     const reason = a.reason ? this._escape(String(a.reason)) : "";
-    auto.innerHTML = `<span class="heater-pill">${this._escape(label)}</span><span>${this._escape(temp)}</span>${thresholds ? `<span>${this._escape(thresholds)}</span>` : ""}${reason ? `<span title="${reason}">${reason}</span>` : ""}`;
+    details.innerHTML = `<span class="heater-pill">${this._escape(label)}</span><span>${this._escape(temp)}</span>${thresholds ? `<span>${this._escape(thresholds)}</span>` : ""}${reason ? `<span title="${reason}">${reason}</span>` : ""}`;
+  }
+
+  async _setBackupHeaterMode(option) {
+    const entityId = this._selectEntity("backup_heater_mode");
+    const state = this._state(entityId);
+    if (!state || state.state === option) return;
+    const autoButton = this.shadowRoot.getElementById("backup_heater_mode_auto");
+    const offButton = this.shadowRoot.getElementById("backup_heater_mode_off");
+    autoButton.disabled = true;
+    offButton.disabled = true;
+    try {
+      await this._hass.callService("select", "select_option", { entity_id: entityId, option });
+    } finally {
+      window.setTimeout(() => this._update(), 150);
+    }
   }
 
   _shortTime(value) {

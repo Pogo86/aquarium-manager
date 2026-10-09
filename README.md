@@ -64,7 +64,7 @@ After confirming the new card loads, the old `/config/www/aquarium-manager-card.
 
 ## Releases
 
-For clean HACS update tracking, publish GitHub releases using tags that match `manifest.json`, for example `v0.9.1`.
+For clean HACS update tracking, publish GitHub releases using tags that match `manifest.json`, for example `v0.9.2`.
 
 ## Fish library
 
@@ -73,3 +73,8 @@ The species database can remain in a separate repository. Aquarium Manager accep
 ## License
 
 MIT
+
+
+## v0.9.2
+
+Backup heater control is now a two-option **Auto / Off** mode selector. **Off** immediately forces the configured heater plug off and keeps the fail-safe controller disabled. **Auto** returns control to the configured temperature thresholds, delay and maximum runtime.

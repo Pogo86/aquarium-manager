@@ -254,7 +254,10 @@ class BackupHeaterController:
 
         if not self.enabled:
             self.status = "disabled"
-            self.last_reason = "Automation disabled"
+            self.last_reason = "Backup heater mode is Off"
+            self.below_since = None
+            if self._heater_available() and self._heater_is_on():
+                await self._async_turn_off(self.last_reason)
             self._notify()
             return
 
@@ -327,6 +330,19 @@ class BackupHeaterController:
             await self._async_turn_off(decision.reason)
 
         self._notify()
+
+    async def async_set_enabled(self, enabled: bool) -> None:
+        """Set Auto/Off mode and apply it immediately."""
+        self.enabled = bool(enabled)
+        if not self.enabled:
+            self.below_since = None
+            if self._heater_available() and self._heater_is_on():
+                await self._async_turn_off("Backup heater mode set to Off")
+            self.status = "disabled"
+            self.last_reason = "Backup heater mode is Off"
+            self._notify()
+            return
+        await self.async_evaluate("mode changed")
 
     def _notify(self) -> None:
         async_dispatcher_send(

@@ -2,7 +2,7 @@
 
 DOMAIN = "aquarium_manager"
 
-PLATFORMS = ["number", "sensor", "switch"]
+PLATFORMS = ["number", "sensor", "switch", "select"]
 
 CONF_TANK_NAME = "tank_name"
 CONF_LENGTH_CM = "length_cm"
