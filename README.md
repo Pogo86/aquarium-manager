@@ -64,7 +64,7 @@ After confirming the new card loads, the old `/config/www/aquarium-manager-card.
 
 ## Releases
 
-For clean HACS update tracking, publish GitHub releases using tags that match `manifest.json`, for example `v0.9.0`.
+For clean HACS update tracking, publish GitHub releases using tags that match `manifest.json`, for example `v0.9.1`.
 
 ## Fish library
 

@@ -999,6 +999,23 @@ class AquariumManagerCard extends HTMLElement {
     });
   }
 
+  _compatData() {
+    const state = this._state(this._sensorEntity("compatibility"));
+    const attrs = state?.attributes || {};
+    const compatible = Array.isArray(attrs.compatible) ? attrs.compatible : [];
+    const groups = Array.isArray(attrs.group_recommendations) ? attrs.group_recommendations : [];
+    const rawTotal = attrs.compatible_count ?? state?.state ?? compatible.length;
+    const parsedTotal = Number(rawTotal);
+    const total = Number.isFinite(parsedTotal) ? parsedTotal : compatible.length;
+    return {
+      state,
+      compatible,
+      groups,
+      total,
+      conflict: attrs.community_conflict === true,
+    };
+  }
+
   _stockData() {
     const state = this._state(this._sensorEntity("stocking"));
     return { state, stock: state?.attributes?.stocking || [], library: state?.attributes?.species_library || [], entryId: state?.attributes?.config_entry_id || null };
