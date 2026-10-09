@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "library_name": "Aquarium Manager Starter Fish Library",
+  "updated": "2026-10-04",
+  "species": [
+    {
+      "id": "cardinal_tetra",
+      "common_name": "Cardinal tetra",
+      "scientific_name": "Paracheirodon axelrodi",
+      "aliases": ["cardinal", "cardinal tetras"],
+      "adult_size_cm": 3.5,
+      "temperature": {"min": 23.0, "max": 29.0},
+      "ph": {"min": 3.5, "max": 7.5},
+      "gh": {"min": 1.0, "max": 12.0},
+      "kh": null,
+      "minimum_group": 8,
+      "minimum_tank": {"length_cm": 60, "width_cm": 30, "height_cm": null},
+      "social_type": "shoal",
+      "temperament": "peaceful",
+      "swimming_zone": "middle",
+      "cautions": ["Best kept in a shoal of at least 8–10."],
+      "source": {
+        "label": "Seriously Fish",
+        "url": "https://www.seriouslyfish.com/species/paracheirodon-axelrodi"
+      }
+    },
+    {
+      "id": "buenos_aires_tetra",
+      "common_name": "Buenos Aires tetra",
+      "scientific_name": "Hyphessobrycon anisitsi",
+      "aliases": ["buenos aires tetras", "buenos aries tetra", "buenos aries tetras"],
+      "adult_size_cm": 6.0,
+      "temperature": {"min": 16.0, "max": 28.0},
+      "ph": {"min": 5.5, "max": 8.5},
+      "gh": {"min": 1.0, "max": 20.0},
+      "kh": null,
+      "minimum_group": 8,
+      "minimum_tank": {"length_cm": 90, "width_cm": 30, "height_cm": null},
+      "social_type": "shoal",
+      "temperament": "active; can fin-nip",
+      "swimming_zone": "middle",
+      "cautions": [
+        "Keep at least 8–10; undersized groups can increase fin-nipping.",
+        "Needs a relatively long tank for active swimming."
+      ],
+      "source": {
+        "label": "Seriously Fish",
+        "url": "https://www.seriouslyfish.com/species/hyphessobrycon-anisitsi"
+      }
+    },
+    {
+      "id": "angelfish",
+      "common_name": "Angelfish",
+      "scientific_name": "Pterophyllum scalare",
+      "aliases": ["angel fish", "freshwater angelfish", "scalare"],
+      "adult_size_cm": 15.0,
+      "temperature": {"min": 24.0, "max": 30.0},
+      "ph": {"min": 6.0, "max": 7.4},
+      "gh": {"min": 0.0, "max": 15.0},
+      "kh": null,
+      "minimum_group": null,
+      "minimum_tank": {"length_cm": 100, "width_cm": 40, "height_cm": 50},
+      "social_type": "pair or small group",
+      "temperament": "generally peaceful cichlid; territorial when breeding",
+      "swimming_zone": "middle",
+      "cautions": [
+        "Adults need a tall aquarium and may eat sufficiently small fish.",
+        "Individuals can become territorial, especially when breeding."
+      ],
+      "source": {
+        "label": "Seriously Fish",
+        "url": "https://www.seriouslyfish.com/species/pterophyllum-scalare"
+      }
+    },
+    {
+      "id": "bristlenose_pleco",
+      "common_name": "Bristlenose pleco",
+      "scientific_name": "Ancistrus sp. '3'",
+      "aliases": ["bristlenose", "bristlenose catfish", "common bristlenose", "ancistrus"],
+      "adult_size_cm": 12.5,
+      "temperature": {"min": 21.0, "max": 26.0},
+      "ph": {"min": 5.5, "max": 7.5},
+      "gh": {"min": 1.0, "max": 15.0},
+      "kh": null,
+      "minimum_group": 1,
+      "minimum_tank": {"length_cm": 60, "width_cm": 30, "height_cm": null},
+      "social_type": "single or pair",
+      "temperament": "peaceful; territorial with similar catfish",
+      "swimming_zone": "bottom",
+      "cautions": ["Provide cover and be cautious with multiple similar plecos."],
+      "source": {
+        "label": "Seriously Fish",
+        "url": "https://www.seriouslyfish.com/species/ancistrus-cf-cirrhosus"
+      }
+    }
+  ]
+}

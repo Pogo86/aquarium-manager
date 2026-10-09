@@ -1,0 +1,414 @@
+add_stock:
+  name: Add livestock
+  description: Add a species or livestock group to an aquarium. Known species are enriched from the active fish library.
+  fields:
+    entry_id:
+      name: Aquarium config entry ID
+      required: true
+      selector:
+        text:
+    name:
+      name: Species/name
+      required: true
+      selector:
+        text:
+    quantity:
+      name: Quantity
+      required: true
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 999
+          mode: box
+    scientific_name:
+      name: Scientific name
+      required: false
+      selector:
+        text:
+    notes:
+      name: Notes
+      required: false
+      selector:
+        text:
+          multiline: true
+
+update_stock:
+  name: Edit livestock
+  description: Edit a stocking record and its care parameters.
+  fields:
+    entry_id:
+      name: Aquarium config entry ID
+      required: true
+      selector:
+        text:
+    stock_id:
+      name: Stocking record ID
+      required: true
+      selector:
+        text:
+    name:
+      name: Species/name
+      required: false
+      selector:
+        text:
+    quantity:
+      name: Quantity
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 999
+          mode: box
+    scientific_name:
+      name: Scientific name
+      required: false
+      selector:
+        text:
+    adult_size_cm:
+      name: Adult size
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 500
+          step: 0.1
+          unit_of_measurement: cm
+          mode: box
+    temperature_min:
+      name: Minimum temperature
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 40
+          step: 0.1
+          unit_of_measurement: °C
+          mode: box
+    temperature_max:
+      name: Maximum temperature
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 40
+          step: 0.1
+          unit_of_measurement: °C
+          mode: box
+    ph_min:
+      name: Minimum pH
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 14
+          step: 0.1
+          mode: box
+    ph_max:
+      name: Maximum pH
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 14
+          step: 0.1
+          mode: box
+    gh_min:
+      name: Minimum GH
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 50
+          step: 0.1
+          unit_of_measurement: dGH
+          mode: box
+    gh_max:
+      name: Maximum GH
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 50
+          step: 0.1
+          unit_of_measurement: dGH
+          mode: box
+    kh_min:
+      name: Minimum KH
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 50
+          step: 0.1
+          unit_of_measurement: dKH
+          mode: box
+    kh_max:
+      name: Maximum KH
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 50
+          step: 0.1
+          unit_of_measurement: dKH
+          mode: box
+    min_group_size:
+      name: Minimum group size
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 999
+          mode: box
+    min_tank_length_cm:
+      name: Minimum tank length
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 1000
+          step: 1
+          unit_of_measurement: cm
+          mode: box
+    min_tank_width_cm:
+      name: Minimum tank width
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 1000
+          step: 1
+          unit_of_measurement: cm
+          mode: box
+    min_tank_height_cm:
+      name: Minimum tank height
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 1000
+          step: 1
+          unit_of_measurement: cm
+          mode: box
+    social_type:
+      name: Social type
+      required: false
+      selector:
+        text:
+    temperament:
+      name: Temperament
+      required: false
+      selector:
+        text:
+    swimming_zone:
+      name: Swimming zone
+      required: false
+      selector:
+        text:
+    notes:
+      name: Notes
+      required: false
+      selector:
+        text:
+          multiline: true
+
+remove_stock:
+  name: Remove livestock
+  description: Remove an existing stocking record from an aquarium.
+  fields:
+    entry_id:
+      name: Aquarium config entry ID
+      required: true
+      selector:
+        text:
+    stock_id:
+      name: Stocking record ID
+      required: true
+      selector:
+        text:
+
+refresh_species_library:
+  name: Refresh species library
+  description: Download and validate the configured fish-library JSON immediately. The current library remains active if validation fails.
+  fields:
+    entry_id:
+      name: Aquarium config entry ID
+      required: true
+      selector:
+        text:
+
+submit_water_readings:
+  name: Submit water readings
+  description: Submit one complete aquarium water-test snapshot and update all six current reading entities together.
+  fields:
+    entry_id:
+      name: Aquarium config entry ID
+      required: true
+      selector:
+        text:
+    ammonia:
+      name: Ammonia
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 10
+          step: 0.01
+          unit_of_measurement: mg/L
+          mode: box
+    nitrite:
+      name: Nitrite
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 10
+          step: 0.01
+          unit_of_measurement: mg/L
+          mode: box
+    nitrate:
+      name: Nitrate
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.5
+          unit_of_measurement: mg/L
+          mode: box
+    ph:
+      name: pH
+      required: true
+      selector:
+        number:
+          min: 4
+          max: 10
+          step: 0.1
+          mode: box
+    gh:
+      name: GH
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 50
+          step: 1
+          unit_of_measurement: dGH
+          mode: box
+    kh:
+      name: KH
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 50
+          step: 1
+          unit_of_measurement: dKH
+          mode: box
+
+
+search_species:
+  name: Search species
+  description: Search SeriouslyFish and FishBase by common or scientific name and return a reviewable species record.
+  fields:
+    entry_id:
+      name: Aquarium config entry ID
+      required: true
+      selector:
+        text:
+    query:
+      name: Fish name
+      required: true
+      selector:
+        text:
+
+add_species_to_library:
+  name: Add species to fish library
+  description: Commit a reviewed species record to the configured GitHub fish_library.json and activate it immediately.
+  fields:
+    entry_id:
+      name: Aquarium config entry ID
+      required: true
+      selector:
+        text:
+    species:
+      name: Species record
+      required: true
+      selector:
+        object:
+
+resync_lighting:
+  name: Resync aquarium light modes
+  description: Power-cycle both configured aquarium lights from a known OFF state, then re-apply the current scheduled Full/Half/Blue mode.
+  fields:
+    entry_id:
+      name: Aquarium config entry ID
+      required: true
+      selector:
+        text:
+
+update_lighting_schedule:
+  name: Update lighting schedule
+  description: Save aquarium light and CO2 timing from the Aquarium Manager dashboard and apply it immediately.
+  fields:
+    entry_id:
+      name: Aquarium config entry ID
+      required: true
+      selector:
+        text:
+    lighting_automation_enabled:
+      name: Lighting automation enabled
+      required: true
+      selector:
+        boolean:
+    lights_on_time:
+      name: Lights on time
+      required: true
+      selector:
+        text:
+    light_duration_hours:
+      name: Main photoperiod duration
+      required: true
+      selector:
+        number:
+          min: 4
+          max: 10
+          step: 0.5
+          unit_of_measurement: h
+    half_light_duration_min:
+      name: Half-light duration
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 360
+          step: 5
+          unit_of_measurement: min
+    blue_light_duration_min:
+      name: Blue-light duration
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 360
+          step: 5
+          unit_of_measurement: min
+    co2_lead_min:
+      name: CO2 lead time
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 360
+          step: 5
+          unit_of_measurement: min
+    co2_off_before_end_min:
+      name: CO2 off before main light end
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 360
+          step: 5
+          unit_of_measurement: min

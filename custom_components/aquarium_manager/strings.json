@@ -1,0 +1,92 @@
+{
+  "title": "Aquarium Manager",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add an aquarium",
+        "description": "Enter the internal aquarium dimensions. Volume will be calculated automatically from length \u00d7 width \u00d7 water depth.",
+        "data": {
+          "tank_name": "Tank name",
+          "length_cm": "Internal length",
+          "width_cm": "Internal width",
+          "water_depth_cm": "Water depth",
+          "water_type": "Water type",
+          "temperature_entity": "Existing temperature sensor (optional)"
+        },
+        "data_description": {
+          "tank_name": "A friendly name such as Main Aquarium.",
+          "length_cm": "Internal tank length in centimetres.",
+          "width_cm": "Internal front-to-back width in centimetres.",
+          "water_depth_cm": "Actual water depth.",
+          "water_type": "Freshwater or marine.",
+          "temperature_entity": "Choose your aquarium temperature probe if it already exists in Home Assistant."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "An aquarium with this name is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Aquarium options",
+        "description": "Configure the remote fish library, GitHub editing, backup heater, lighting schedule and CO2 automation.",
+        "data": {
+          "species_library_url": "Fish library JSON URL",
+          "backup_heater_switch": "Backup heater plug switch",
+          "backup_heater_automation_enabled": "Enable backup heater automation",
+          "backup_heater_on_temp_c": "Turn backup heater on below",
+          "backup_heater_off_temp_c": "Turn backup heater off at",
+          "backup_heater_low_delay_min": "Low-temperature delay",
+          "backup_heater_max_runtime_min": "Maximum continuous runtime",
+          "github_token": "GitHub write token (optional)",
+          "light_1_switch": "Aquarium light 1 plug",
+          "light_2_switch": "Aquarium light 2 plug",
+          "co2_switch": "CO2 solenoid / plug",
+          "lighting_automation_enabled": "Enable lighting and CO2 automation",
+          "lights_on_time": "Main lights on time",
+          "light_duration_hours": "Main photoperiod duration",
+          "half_light_duration_min": "Half-light period at end",
+          "blue_light_duration_min": "Blue-light period after main photoperiod",
+          "co2_lead_min": "CO2 start before lights",
+          "co2_off_before_end_min": "CO2 stop before main lights end",
+          "light_mode_toggle_seconds": "Light mode power-cycle delay"
+        },
+        "data_description": {
+          "species_library_url": "Use the Raw GitHub URL to fish_library.json. The last valid copy is cached and refreshed every 24 hours.",
+          "backup_heater_switch": "Choose the Home Assistant switch entity for the second heater.",
+          "backup_heater_automation_enabled": "When enabled, Aquarium Manager manages the backup heater using the aquarium temperature probe and the safety settings below.",
+          "backup_heater_on_temp_c": "The temperature must stay below this threshold for the configured delay before the backup heater turns on.",
+          "backup_heater_off_temp_c": "The backup heater turns off when the aquarium reaches this temperature. This must be higher than the ON threshold.",
+          "backup_heater_low_delay_min": "Prevents short temperature dips from starting the backup heater.",
+          "backup_heater_max_runtime_min": "Fail-safe maximum continuous run. Reaching it turns the heater off and locks automation until the water recovers to the OFF temperature or the integration is reconfigured/restarted.",
+          "github_token": "Fine-grained token for the fish-library repository with Contents: read/write. Used only by Home Assistant to commit reviewed species; it is never exposed on the dashboard.",
+          "light_1_switch": "Choose the Zigbee plug for the first aquarium light.",
+          "light_2_switch": "Choose the Zigbee plug for the second aquarium light.",
+          "co2_switch": "Choose the Zigbee plug controlling the CO2 solenoid/generator output.",
+          "lighting_automation_enabled": "Calculates the full, half, blue and CO2 schedule from the lights-on time and main photoperiod duration.",
+          "lights_on_time": "Start of the main plant-lighting period. Enter as HH:MM, for example 12:00.",
+          "light_duration_hours": "Total main plant photoperiod. The final half-light period is included inside this duration; blue light is added afterwards.",
+          "half_light_duration_min": "How long before the end of the main photoperiod to switch both lamps from full to half light.",
+          "blue_light_duration_min": "Optional blue viewing period after the main photoperiod. CO2 is always off during blue mode.",
+          "co2_lead_min": "CO2 pre-charge before the main lights. Default 120 minutes.",
+          "co2_off_before_end_min": "Stops CO2 before the end of the main photoperiod. Default 60 minutes.",
+          "light_mode_toggle_seconds": "Your lamps change Full \u2192 Half \u2192 Blue by a quick plug OFF/ON cycle. This is the pause used for each cycle."
+        }
+      }
+    },
+    "error": {
+      "invalid_url": "Enter a valid http:// or https:// URL.",
+      "invalid_switch": "Choose a switch.* entity.",
+      "heater_required": "Choose a backup heater switch before enabling automation.",
+      "temperature_required": "An existing aquarium temperature sensor is required for backup-heater automation.",
+      "off_must_exceed_on": "The OFF temperature must be higher than the ON temperature.",
+      "lighting_switches_required": "Choose both light switches and the CO2 switch before enabling lighting automation.",
+      "lights_must_differ": "Light 1 and Light 2 must be different switch entities.",
+      "half_exceeds_duration": "The half-light period cannot be longer than the main photoperiod.",
+      "co2_off_exceeds_duration": "CO2 cannot be scheduled to stop more minutes before lights-out than the whole photoperiod.",
+      "invalid_time": "Enter a valid time as HH:MM, for example 12:00."
+    }
+  }
+}
