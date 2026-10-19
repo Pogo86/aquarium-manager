@@ -86,3 +86,13 @@ MIT
 ## v0.9.3
 
 Backup heater control is now a two-option **Auto / Off** mode selector. **Off** immediately forces the configured heater plug off and keeps the fail-safe controller disabled. **Auto** returns control to the configured temperature thresholds, delay and maximum runtime.
+
+## v0.9.4 filter management
+
+- Adds a built-in Fluval 307 profile with rated circulation, tank range and media volumes.
+- Adds a Filter section to the Equipment tab with calculated turnover, media stages and maintenance status.
+- Supports optional measured flow; measured flow is preferred over the manufacturer's rated circulation for turnover calculations.
+- Adds editable vertical pre-filter, bottom, middle and top basket media.
+- Adds filter maintenance tracking and a **Mark filter cleaned** action.
+- Feeds filtration condition into the stocking assessment without treating filter capacity as permission to overstock.
+

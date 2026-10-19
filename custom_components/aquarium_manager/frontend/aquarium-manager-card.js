@@ -61,6 +61,7 @@ class AquariumManagerCard extends HTMLElement {
       library: ["sensor", "fish_library"],
       heater_automation: ["sensor", "backup_heater_automation"],
       lighting_automation: ["sensor", "lighting_automation"],
+      filter: ["sensor", "filter"],
       gh_delta: ["sensor", "gh_above_source_water"],
       kh_delta: ["sensor", "kh_above_source_water"],
       nitrate_delta: ["sensor", "nitrate_above_source_water"],
@@ -131,7 +132,20 @@ class AquariumManagerCard extends HTMLElement {
         .empty{padding:16px;text-align:center;font-size:12px;color:var(--secondary-text-color)}
         .parameter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.source-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.delta-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.parameter,.delta{border:1px solid var(--divider-color);border-radius:10px;padding:10px;background:var(--secondary-background-color)}.delta{background:transparent}.param-head{display:flex;justify-content:space-between;gap:8px;margin-bottom:5px}.param-name,.delta-label{font-size:11px;color:var(--secondary-text-color)}.param-unit{font-size:9px;color:var(--secondary-text-color)}.delta-value{font-size:15px;font-weight:650;margin-top:4px}
         input,textarea,select{box-sizing:border-box;width:100%;max-width:100%;min-width:0;font:inherit;color:var(--primary-text-color);background:transparent;border:1px solid var(--divider-color);border-radius:8px;padding:8px;outline:none}input:focus,textarea:focus,select:focus{border-color:var(--primary-color)}button{max-width:100%}.parameter input{border:0;border-bottom:1px solid var(--divider-color);border-radius:0;padding:3px 0;font-size:18px;font-weight:650}.source-grid .parameter input{font-size:16px}
-        .equipment-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--divider-color);border-radius:11px}.equipment-main{min-width:0}.equipment-name{font-size:14px;font-weight:650}.equipment-sub{font-size:11px;color:var(--secondary-text-color);margin-top:3px}.heater-auto{margin-top:7px;font-size:11px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}.heater-pill{border:1px solid var(--divider-color);border-radius:999px;padding:3px 7px;background:var(--secondary-background-color)}.equipment-toggle{border:1px solid var(--divider-color);background:var(--secondary-background-color);color:var(--primary-text-color);border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:650}.equipment-toggle.on{color:var(--success-color,#43a047);border-color:color-mix(in srgb,var(--success-color,#43a047) 50%,var(--divider-color))}.heater-mode-toggle{display:grid;grid-template-columns:1fr 1fr;min-width:150px;border:1px solid var(--divider-color);border-radius:10px;padding:3px;background:var(--secondary-background-color);gap:3px}.heater-mode-btn{border:0;background:transparent;color:var(--secondary-text-color);border-radius:7px;min-height:38px;padding:7px 13px;font-weight:700;cursor:pointer}.heater-mode-btn.active{background:var(--primary-color);color:var(--text-primary-color,#fff)}.heater-mode-btn:disabled{opacity:.5;cursor:default}.lighting-panel{margin-top:10px;border:1px solid var(--divider-color);border-radius:11px;padding:12px}.lighting-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.lighting-state{font-weight:700;text-transform:capitalize}.lighting-reason{font-size:11px;color:var(--secondary-text-color);margin-top:3px}.lighting-devices{font-size:11px;color:var(--secondary-text-color);margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}.device-dot{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:999px;background:var(--secondary-background-color)}.device-dot.on{color:var(--success-color,#43a047)}.schedule-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}.schedule-item{border:1px solid var(--divider-color);border-radius:9px;padding:8px}.schedule-label{font-size:9px;text-transform:uppercase;color:var(--secondary-text-color)}.schedule-value{font-size:13px;font-weight:650;margin-top:3px}.lighting-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.lighting-actions button{border:1px solid var(--divider-color);background:var(--secondary-background-color);color:var(--primary-text-color);border-radius:9px;padding:8px 10px;cursor:pointer}.lighting-actions button.active{color:var(--error-color);border-color:color-mix(in srgb,var(--error-color) 45%,var(--divider-color))}.lighting-editor{margin-top:12px;padding-top:12px;border-top:1px solid var(--divider-color)}.lighting-editor-title{font-size:12px;font-weight:700;margin-bottom:8px}.lighting-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.lighting-enabled{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:11px}.lighting-enabled input{width:auto}.lighting-field label{display:block;font-size:10px;color:var(--secondary-text-color);margin:0 0 4px}.lighting-field input{font-size:13px;padding:8px}.lighting-preview{margin-top:9px;padding:9px;border-radius:9px;background:var(--secondary-background-color);font-size:10px;line-height:1.5;color:var(--secondary-text-color)}.lighting-save-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}.lighting-save-message{font-size:10px;color:var(--secondary-text-color)}.lighting-save{background:var(--primary-color);color:var(--text-primary-color,#fff);border:0;font-weight:700;padding:8px 12px}.reading-submit{border:1px solid var(--divider-color);border-radius:12px;padding:13px}.reading-submit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.reading-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}.reading-submit-btn{border:0;border-radius:9px;background:var(--primary-color);color:var(--text-primary-color,#fff);padding:9px 14px;font-weight:700;cursor:pointer}.reading-submit-btn:disabled{opacity:.55;cursor:default}.reading-message{font-size:11px;color:var(--secondary-text-color)}.water-warning{display:none;margin-top:10px;padding:9px 10px;border-radius:9px;font-size:12px;background:color-mix(in srgb,var(--warning-color,#f9a825) 10%,transparent)}.water-warning.show{display:block}
+        .equipment-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--divider-color);border-radius:11px}
+        .filter-panel{border:1px solid var(--divider-color);border-radius:11px;padding:12px}
+        .filter-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+        .filter-title{font-size:14px;font-weight:700}.filter-sub{font-size:11px;color:var(--secondary-text-color);margin-top:3px}
+        .filter-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:10px}
+        .filter-metric{border:1px solid var(--divider-color);border-radius:9px;padding:8px;min-width:0}
+        .filter-metric-label{font-size:9px;text-transform:uppercase;color:var(--secondary-text-color)}
+        .filter-metric-value{font-size:13px;font-weight:650;margin-top:3px;overflow-wrap:anywhere}
+        .filter-stages{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+        .filter-stage{border:1px solid var(--divider-color);border-radius:9px;padding:9px;min-width:0}
+        .filter-stage-title{font-size:11px;font-weight:700;margin-bottom:5px}.filter-media{font-size:10px;color:var(--secondary-text-color);line-height:1.5;overflow-wrap:anywhere}
+        .filter-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.filter-actions button{border:1px solid var(--divider-color);background:var(--secondary-background-color);color:var(--primary-text-color);border-radius:9px;padding:8px 10px;cursor:pointer}
+        .filter-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.filter-editor-field label{display:block;font-size:10px;color:var(--secondary-text-color);margin-bottom:4px}.filter-editor-stage{margin-top:12px}.filter-editor-stage textarea{min-height:90px;font-size:12px}
+.equipment-main{min-width:0}.equipment-name{font-size:14px;font-weight:650}.equipment-sub{font-size:11px;color:var(--secondary-text-color);margin-top:3px}.heater-auto{margin-top:7px;font-size:11px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}.heater-pill{border:1px solid var(--divider-color);border-radius:999px;padding:3px 7px;background:var(--secondary-background-color)}.equipment-toggle{border:1px solid var(--divider-color);background:var(--secondary-background-color);color:var(--primary-text-color);border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:650}.equipment-toggle.on{color:var(--success-color,#43a047);border-color:color-mix(in srgb,var(--success-color,#43a047) 50%,var(--divider-color))}.heater-mode-toggle{display:grid;grid-template-columns:1fr 1fr;min-width:150px;border:1px solid var(--divider-color);border-radius:10px;padding:3px;background:var(--secondary-background-color);gap:3px}.heater-mode-btn{border:0;background:transparent;color:var(--secondary-text-color);border-radius:7px;min-height:38px;padding:7px 13px;font-weight:700;cursor:pointer}.heater-mode-btn.active{background:var(--primary-color);color:var(--text-primary-color,#fff)}.heater-mode-btn:disabled{opacity:.5;cursor:default}.lighting-panel{margin-top:10px;border:1px solid var(--divider-color);border-radius:11px;padding:12px}.lighting-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.lighting-state{font-weight:700;text-transform:capitalize}.lighting-reason{font-size:11px;color:var(--secondary-text-color);margin-top:3px}.lighting-devices{font-size:11px;color:var(--secondary-text-color);margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}.device-dot{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:999px;background:var(--secondary-background-color)}.device-dot.on{color:var(--success-color,#43a047)}.schedule-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}.schedule-item{border:1px solid var(--divider-color);border-radius:9px;padding:8px}.schedule-label{font-size:9px;text-transform:uppercase;color:var(--secondary-text-color)}.schedule-value{font-size:13px;font-weight:650;margin-top:3px}.lighting-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.lighting-actions button{border:1px solid var(--divider-color);background:var(--secondary-background-color);color:var(--primary-text-color);border-radius:9px;padding:8px 10px;cursor:pointer}.lighting-actions button.active{color:var(--error-color);border-color:color-mix(in srgb,var(--error-color) 45%,var(--divider-color))}.lighting-editor{margin-top:12px;padding-top:12px;border-top:1px solid var(--divider-color)}.lighting-editor-title{font-size:12px;font-weight:700;margin-bottom:8px}.lighting-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.lighting-enabled{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:11px}.lighting-enabled input{width:auto}.lighting-field label{display:block;font-size:10px;color:var(--secondary-text-color);margin:0 0 4px}.lighting-field input{font-size:13px;padding:8px}.lighting-preview{margin-top:9px;padding:9px;border-radius:9px;background:var(--secondary-background-color);font-size:10px;line-height:1.5;color:var(--secondary-text-color)}.lighting-save-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}.lighting-save-message{font-size:10px;color:var(--secondary-text-color)}.lighting-save{background:var(--primary-color);color:var(--text-primary-color,#fff);border:0;font-weight:700;padding:8px 12px}.reading-submit{border:1px solid var(--divider-color);border-radius:12px;padding:13px}.reading-submit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.reading-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}.reading-submit-btn{border:0;border-radius:9px;background:var(--primary-color);color:var(--text-primary-color,#fff);padding:9px 14px;font-weight:700;cursor:pointer}.reading-submit-btn:disabled{opacity:.55;cursor:default}.reading-message{font-size:11px;color:var(--secondary-text-color)}.water-warning{display:none;margin-top:10px;padding:9px 10px;border-radius:9px;font-size:12px;background:color-mix(in srgb,var(--warning-color,#f9a825) 10%,transparent)}.water-warning.show{display:block}
         .species-search{display:flex;gap:8px;align-items:center}.species-search input{flex:1}.species-search button{padding:9px 13px;font-weight:700}.species-result{margin-top:14px}.species-preview{border:1px solid var(--divider-color);border-radius:12px;padding:13px}.species-preview-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.source-pills{display:flex;gap:6px;flex-wrap:wrap}.source-pill{font-size:10px;font-weight:700;border-radius:999px;padding:4px 7px;background:var(--secondary-background-color)}.source-pill.found{color:var(--success-color,#43a047)}.species-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.species-form .full{grid-column:1/-1}.species-form label{display:block;font-size:10px;color:var(--secondary-text-color);margin-bottom:4px}.species-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:13px}.species-message{font-size:11px;color:var(--secondary-text-color);margin-top:9px}.species-message.error{color:var(--error-color)}
         .modal-backdrop{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.48);display:none;align-items:center;justify-content:center;padding:16px}.modal-backdrop.open{display:flex}.modal{width:min(620px,100%);max-height:min(780px,92vh);overflow:auto;background:var(--card-background-color);border-radius:16px;box-shadow:0 16px 50px rgba(0,0,0,.35)}
         .modal-head{position:sticky;top:0;background:var(--card-background-color);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:17px 18px 12px;border-bottom:1px solid var(--divider-color);z-index:1}.modal-title{font-size:18px;font-weight:700}.modal-subtitle{font-size:12px;color:var(--secondary-text-color);font-style:italic;margin-top:3px}.icon-btn{padding:5px;display:grid;place-items:center;background:transparent}.icon-btn ha-icon{--mdc-icon-size:20px}.modal-body{padding:16px 18px 18px}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.detail{border:1px solid var(--divider-color);border-radius:10px;padding:10px}.detail-label{font-size:10px;text-transform:uppercase;color:var(--secondary-text-color)}.detail-value{font-size:13px;font-weight:600;margin-top:4px}.modal-section{margin-top:16px}.modal-section-title{font-size:12px;font-weight:700;margin-bottom:8px}.care-note{font-size:12px;line-height:1.4;padding:8px 10px;background:var(--secondary-background-color);border-radius:8px;margin-top:5px}.modal-actions{justify-content:flex-end;gap:8px;margin-top:18px}.primary{background:var(--primary-color);color:var(--text-primary-color,#fff);border-color:var(--primary-color);font-weight:650}.danger-btn{color:var(--error-color);margin-right:auto}
@@ -173,6 +187,7 @@ class AquariumManagerCard extends HTMLElement {
           input,textarea,select{font-size:16px}.lighting-field input{font-size:16px}.parameter input{font-size:18px}
           .species-actions,.modal-actions{display:grid;grid-template-columns:1fr;width:100%}.species-actions button,.modal-actions button{width:100%;min-height:44px}.danger-btn{margin-right:0}
           .warning-line{overflow-wrap:anywhere}.small-help,.footer,.equipment-sub,.lighting-reason,.compat-sub,.group-sub,.bioload-note{overflow-wrap:anywhere}
+          .filter-metrics,.filter-stages,.filter-editor-grid{grid-template-columns:1fr}.filter-actions{display:grid;grid-template-columns:1fr}.filter-actions button{width:100%;min-height:44px}
         }
         @media(max-width:360px){.summary,.community-grid,.assessment-grid,.schedule-grid{grid-template-columns:1fr}.hero-top{align-items:flex-start}.tank-icon{width:40px;height:40px}.tabs{padding-left:8px;padding-right:8px}.content{padding-left:10px;padding-right:10px}}
       </style>
@@ -253,6 +268,14 @@ class AquariumManagerCard extends HTMLElement {
             <section class="section"><div class="section-title"><ha-icon icon="mdi:radiator"></ha-icon>Backup heater</div>
               <div id="backup_heater_row" class="equipment-row"><div class="equipment-main"><div class="equipment-name">Backup heater</div><div id="backup_heater_sub" class="equipment-sub">Not configured</div><div id="backup_heater_details" class="heater-auto"></div></div><div class="heater-mode-toggle" aria-label="Backup heater mode"><button id="backup_heater_mode_auto" type="button" class="heater-mode-btn" disabled>Auto</button><button id="backup_heater_mode_off" type="button" class="heater-mode-btn" disabled>Off</button></div></div>
             </section>
+            <section class="section"><div class="section-title"><ha-icon icon="mdi:air-filter"></ha-icon>Filter</div>
+              <div id="filter_panel" class="filter-panel">
+                <div class="filter-top"><div><div id="filter_name" class="filter-title">Fluval 307</div><div id="filter_sub" class="filter-sub">Loading filter data…</div></div></div>
+                <div id="filter_metrics" class="filter-metrics"></div>
+                <div id="filter_stages" class="filter-stages"></div>
+                <div class="filter-actions"><button id="edit_filter" type="button">Edit filter & media</button><button id="mark_filter_cleaned" type="button">Mark filter cleaned</button></div>
+              </div>
+            </section>
             <section class="section"><div class="section-title"><ha-icon icon="mdi:lightbulb-on-outline"></ha-icon>Lighting & CO₂</div>
               <div id="lighting_panel" class="lighting-panel" style="margin-top:0">
                 <div class="lighting-top"><div><div class="equipment-name">Lighting & CO₂ automation</div><div id="lighting_state" class="lighting-state">Not configured</div><div id="lighting_reason" class="lighting-reason"></div></div></div>
@@ -312,6 +335,8 @@ class AquariumManagerCard extends HTMLElement {
     this.shadowRoot.getElementById("refresh_library").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); this._refreshLibrary(); });
     this.shadowRoot.getElementById("backup_heater_mode_auto").addEventListener("click", () => this._setBackupHeaterMode("Auto"));
     this.shadowRoot.getElementById("backup_heater_mode_off").addEventListener("click", () => this._setBackupHeaterMode("Off"));
+    this.shadowRoot.getElementById("edit_filter").addEventListener("click", () => this._openFilterEditor());
+    this.shadowRoot.getElementById("mark_filter_cleaned").addEventListener("click", () => this._markFilterCleaned());
     this.shadowRoot.getElementById("lights_off_today").addEventListener("click", () => this._toggleLightsOffToday());
     this.shadowRoot.getElementById("resync_lighting").addEventListener("click", () => this._resyncLighting());
     this.shadowRoot.getElementById("lighting_save").addEventListener("click", () => this._saveLightingSchedule());
@@ -356,6 +381,7 @@ class AquariumManagerCard extends HTMLElement {
     this._setStatus("water_status", water?.state || "unknown");
     this._renderBackupHeater();
     this._renderLighting();
+    this._renderFilter();
     this._renderLastWaterTest(water);
     const reasons = water?.attributes?.reasons || [];
     const ww = this.shadowRoot.getElementById("water_warning");
@@ -370,6 +396,158 @@ class AquariumManagerCard extends HTMLElement {
     this._setTab(this._activeTab);
   }
 
+
+  _renderFilter() {
+    const state = this._state(this._sensorEntity("filter"));
+    const name = this.shadowRoot.getElementById("filter_name");
+    const sub = this.shadowRoot.getElementById("filter_sub");
+    const metrics = this.shadowRoot.getElementById("filter_metrics");
+    const stages = this.shadowRoot.getElementById("filter_stages");
+    const edit = this.shadowRoot.getElementById("edit_filter");
+    const cleaned = this.shadowRoot.getElementById("mark_filter_cleaned");
+    if (!name || !sub || !metrics || !stages || !edit || !cleaned) return;
+    if (!state || ["unknown","unavailable"].includes(state.state)) {
+      name.textContent = "Filter";
+      sub.textContent = "Filter data unavailable — restart Home Assistant after upgrading.";
+      metrics.innerHTML = "";
+      stages.innerHTML = "";
+      edit.disabled = true;
+      cleaned.disabled = true;
+      return;
+    }
+    const a = state.attributes || {};
+    const summary = a.summary || {};
+    const filter = a.filter || {};
+    name.textContent = state.state || "Filter";
+    const turnover = Number.isFinite(Number(summary.turnover_per_hour)) ? Number(summary.turnover_per_hour).toFixed(1) + "×/h" : "—";
+    const source = summary.flow_source === "measured" ? "measured flow" : "rated circulation";
+    sub.textContent = turnover === "—" ? "Turnover unavailable" : turnover + " using " + source;
+
+    const maintenance = summary.maintenance_status === "overdue"
+      ? "Overdue"
+      : summary.maintenance_status === "due_soon"
+        ? "Due soon"
+        : summary.next_maintenance
+          ? this._shortDate(summary.next_maintenance)
+          : "Not recorded";
+    const flow = Number.isFinite(Number(summary.effective_flow_lph)) ? Number(summary.effective_flow_lph).toFixed(0) + " L/h" : "—";
+    const rated = summary.rated_tank_min_l != null && summary.rated_tank_max_l != null
+      ? Number(summary.rated_tank_min_l).toFixed(0) + "–" + Number(summary.rated_tank_max_l).toFixed(0) + " L"
+      : "—";
+    metrics.innerHTML = [
+      ["Flow", flow],
+      ["Turnover", turnover],
+      ["Rated tank", rated],
+      ["Maintenance", maintenance],
+    ].map(([label,value]) => '<div class="filter-metric"><div class="filter-metric-label">' + this._escape(label) + '</div><div class="filter-metric-value">' + this._escape(value) + '</div></div>').join("");
+
+    const rows = Array.isArray(filter.stages) ? filter.stages : [];
+    stages.innerHTML = rows.map(stage => {
+      const media = Array.isArray(stage.media) ? stage.media : [];
+      const body = media.length
+        ? media.map(item => this._escape((item.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) + ": " : "") + (item.name || "Unnamed media"))).join("<br>")
+        : "Empty";
+      return '<div class="filter-stage"><div class="filter-stage-title">' + this._escape(stage.name || "Stage") + '</div><div class="filter-media">' + body + '</div></div>';
+    }).join("");
+    edit.disabled = false;
+    cleaned.disabled = false;
+  }
+
+  _shortDate(value) {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString();
+  }
+
+  _filterMediaLines(stage) {
+    const media = Array.isArray(stage?.media) ? stage.media : [];
+    return media.map(item => [item.type || "other", item.name || "", item.amount || ""].join(" | ")).join("\n");
+  }
+
+  _openFilterEditor() {
+    const state = this._state(this._sensorEntity("filter"));
+    const filter = state?.attributes?.filter;
+    if (!filter) return;
+    const modal = this.shadowRoot.getElementById("modal");
+    const backdrop = this.shadowRoot.getElementById("modal_backdrop");
+    const stages = Array.isArray(filter.stages) ? filter.stages : [];
+    const stageHtml = stages.map((stage,index) =>
+      '<div class="filter-editor-stage"><div class="filter-stage-title">' + this._escape(stage.name || ("Stage " + (index + 1))) + '</div>' +
+      '<div class="small-help">One item per line: type | media name | optional amount</div>' +
+      '<textarea id="filter_stage_' + index + '">' + this._escape(this._filterMediaLines(stage)) + '</textarea></div>'
+    ).join("");
+    modal.innerHTML = '<h2 style="margin-top:0">Filter & media</h2>' +
+      '<div class="filter-editor-grid">' +
+      '<div class="filter-editor-field"><label>Manufacturer</label><input id="filter_manufacturer" value="' + this._escape(filter.manufacturer || "") + '"></div>' +
+      '<div class="filter-editor-field"><label>Model</label><input id="filter_model" value="' + this._escape(filter.model || "") + '"></div>' +
+      '<div class="filter-editor-field"><label>Rated circulation (L/h)</label><input id="filter_rated_flow" type="number" min="0" step="1" value="' + this._escape(filter.rated_circulation_lph ?? "") + '"></div>' +
+      '<div class="filter-editor-field"><label>Measured flow (L/h, optional)</label><input id="filter_measured_flow" type="number" min="0" step="1" value="' + this._escape(filter.measured_flow_lph ?? "") + '"></div>' +
+      '<div class="filter-editor-field"><label>Rated tank minimum (L)</label><input id="filter_rated_min" type="number" min="0" step="1" value="' + this._escape(filter.rated_tank_min_l ?? "") + '"></div>' +
+      '<div class="filter-editor-field"><label>Rated tank maximum (L)</label><input id="filter_rated_max" type="number" min="0" step="1" value="' + this._escape(filter.rated_tank_max_l ?? "") + '"></div>' +
+      '<div class="filter-editor-field"><label>Maintenance interval (days)</label><input id="filter_maintenance_days" type="number" min="1" max="3650" step="1" value="' + this._escape(filter.maintenance_interval_days ?? 30) + '"></div>' +
+      '<div class="filter-editor-field"><label>Basket media volume (L)</label><input id="filter_media_volume" type="number" min="0" step="0.1" value="' + this._escape(filter.media_basket_volume_l ?? "") + '"></div>' +
+      '</div>' + stageHtml +
+      '<div class="modal-actions"><button id="filter_cancel" type="button">Cancel</button><button id="filter_save" type="button" class="primary">Save filter</button></div>';
+    backdrop.classList.add("show");
+    modal.querySelector("#filter_cancel")?.addEventListener("click", () => this._closeModal());
+    modal.querySelector("#filter_save")?.addEventListener("click", () => this._saveFilterEditor(filter, stages));
+  }
+
+  _parseFilterMedia(text) {
+    return String(text || "").split(/\r?\n/).map(line => line.trim()).filter(Boolean).map(line => {
+      const parts = line.split("|").map(x => x.trim());
+      const typeRaw = (parts[0] || "other").toLowerCase();
+      const type = ["mechanical","biological","chemical","other"].includes(typeRaw) ? typeRaw : "other";
+      return {type, name: parts[1] || parts[0] || "Media", amount: parts[2] || "", notes: "", last_serviced: null, replace_interval_days: null};
+    });
+  }
+
+  async _saveFilterEditor(original, stages) {
+    const modal = this.shadowRoot.getElementById("modal");
+    const { entryId } = this._stockData();
+    if (!modal || !entryId) return;
+    const num = id => {
+      const raw = modal.querySelector("#" + id)?.value ?? "";
+      if (raw === "") return null;
+      const value = Number(raw);
+      return Number.isFinite(value) ? value : null;
+    };
+    const updated = JSON.parse(JSON.stringify(original || {}));
+    updated.manufacturer = modal.querySelector("#filter_manufacturer")?.value?.trim() || "Fluval";
+    updated.model = modal.querySelector("#filter_model")?.value?.trim() || "307";
+    updated.rated_circulation_lph = num("filter_rated_flow");
+    updated.measured_flow_lph = num("filter_measured_flow");
+    updated.rated_tank_min_l = num("filter_rated_min");
+    updated.rated_tank_max_l = num("filter_rated_max");
+    updated.maintenance_interval_days = num("filter_maintenance_days") || 30;
+    updated.media_basket_volume_l = num("filter_media_volume");
+    updated.stages = stages.map((stage,index) => ({
+      ...stage,
+      media: this._parseFilterMedia(modal.querySelector("#filter_stage_" + index)?.value || "")
+    }));
+    const button = modal.querySelector("#filter_save");
+    if (button) button.disabled = true;
+    try {
+      await this._callResponseService("update_filter", { entry_id: entryId, filter: updated });
+      this._closeModal();
+    } catch (err) {
+      if (button) button.disabled = false;
+      window.alert("Could not save filter: " + (err?.message || err));
+    }
+  }
+
+  async _markFilterCleaned() {
+    const { entryId } = this._stockData();
+    if (!entryId) return;
+    const button = this.shadowRoot.getElementById("mark_filter_cleaned");
+    if (button) button.disabled = true;
+    try {
+      await this._callResponseService("mark_filter_cleaned", { entry_id: entryId });
+    } finally {
+      window.setTimeout(() => { if (button) button.disabled = false; this._update(); }, 200);
+    }
+  }
 
   _renderBackupHeater() {
     const heaterEntityId = this._switchEntity("backup_heater");

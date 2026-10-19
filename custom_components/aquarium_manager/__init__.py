@@ -78,9 +78,12 @@ from .const import (
     SERVICE_RESYNC_LIGHTING,
     SERVICE_UPDATE_LIGHTING_SCHEDULE,
     SERVICE_START_WATER_TEST_TIMER,
+    SERVICE_UPDATE_FILTER,
+    SERVICE_MARK_FILTER_CLEANED,
     SERVICE_REMOVE_STOCK,
     SERVICE_UPDATE_STOCK,
     SIGNAL_LIBRARY_UPDATED,
+    SIGNAL_FILTER_UPDATED,
     SIGNAL_STOCKING_UPDATED,
     STOCK_STORAGE_KEY_PREFIX,
     STOCK_STORAGE_VERSION,
@@ -90,6 +93,7 @@ from .species_importer import ImporterError, lookup_species_for_ha
 from .github_library import GitHubLibraryError, GitHubLibraryWriter, github_target_from_raw_url
 from .heater import BackupHeaterController
 from .lighting import AquariumLightingController
+from .filtering import default_filter_data, normalize_filter_data
 
 
 @dataclass
@@ -110,6 +114,7 @@ class AquariumRuntimeData:
     github_token: str = ""
     water_test_notify_entity: str = ""
     water_test_timer_cancels: dict[str, Callable[[], None]] = field(default_factory=dict)
+    filter_data: dict[str, Any] = field(default_factory=default_filter_data)
 
     @property
     def github_write_ready(self) -> bool:
@@ -131,6 +136,7 @@ class AquariumRuntimeData:
         )
         saved = await self.store.async_load() or {}
         self.last_reading_submitted = saved.get("last_reading_submitted")
+        self.filter_data = normalize_filter_data(saved.get("filter_data"))
         stocking = saved.get("stocking", [])
         changed = False
 
@@ -155,6 +161,7 @@ class AquariumRuntimeData:
             {
                 "stocking": self.stocking,
                 "last_reading_submitted": self.last_reading_submitted,
+                "filter_data": self.filter_data,
             }
         )
         if notify:
@@ -344,6 +351,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {
             vol.Required(ATTR_ENTRY_ID): cv.string,
             vol.Required(ATTR_TEST_TYPE): vol.In(("ammonia", "nitrite", "nitrate")),
+        }
+    )
+
+    update_filter_schema = vol.Schema(
+        {
+            vol.Required(ATTR_ENTRY_ID): cv.string,
+            vol.Required("filter"): dict,
+        }
+    )
+
+    mark_filter_cleaned_schema = vol.Schema(
+        {
+            vol.Required(ATTR_ENTRY_ID): cv.string,
         }
     )
 
@@ -607,6 +627,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         result["github_write_ready"] = runtime.github_write_ready
         return result
 
+    async def async_update_filter(call: ServiceCall) -> dict[str, Any]:
+        """Persist filter specifications, media layout and maintenance settings."""
+        runtime = _runtime_or_raise(hass, call.data[ATTR_ENTRY_ID])
+        runtime.filter_data = normalize_filter_data(call.data["filter"])
+        await runtime.async_save_stocking(notify=False)
+        async_dispatcher_send(hass, f"{SIGNAL_FILTER_UPDATED}_{runtime.entry_id}")
+        async_dispatcher_send(hass, f"{SIGNAL_STOCKING_UPDATED}_{runtime.entry_id}")
+        return {"filter": runtime.filter_data}
+
+    async def async_mark_filter_cleaned(call: ServiceCall) -> dict[str, Any]:
+        """Mark the filter and its current media as serviced now."""
+        runtime = _runtime_or_raise(hass, call.data[ATTR_ENTRY_ID])
+        now = datetime.now(UTC).isoformat()
+        updated = normalize_filter_data(runtime.filter_data)
+        updated["last_cleaned"] = now
+        for stage in updated.get("stages", []):
+            for item in stage.get("media", []):
+                item["last_serviced"] = now
+        runtime.filter_data = updated
+        await runtime.async_save_stocking(notify=False)
+        async_dispatcher_send(hass, f"{SIGNAL_FILTER_UPDATED}_{runtime.entry_id}")
+        async_dispatcher_send(hass, f"{SIGNAL_STOCKING_UPDATED}_{runtime.entry_id}")
+        return {"filter": runtime.filter_data, "cleaned_at": now}
+
     async def async_add_species_to_library(call: ServiceCall) -> dict[str, Any]:
         """Commit one reviewed species record to the configured GitHub library."""
         runtime = _runtime_or_raise(hass, call.data[ATTR_ENTRY_ID])
@@ -683,6 +727,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.services.async_register(
             DOMAIN, SERVICE_START_WATER_TEST_TIMER, async_start_water_test_timer,
             schema=water_test_timer_schema, supports_response=SupportsResponse.ONLY,
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_UPDATE_FILTER):
+        hass.services.async_register(
+            DOMAIN, SERVICE_UPDATE_FILTER, async_update_filter,
+            schema=update_filter_schema, supports_response=SupportsResponse.ONLY,
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_MARK_FILTER_CLEANED):
+        hass.services.async_register(
+            DOMAIN, SERVICE_MARK_FILTER_CLEANED, async_mark_filter_cleaned,
+            schema=mark_filter_cleaned_schema, supports_response=SupportsResponse.ONLY,
         )
 
     if not hass.services.has_service(DOMAIN, SERVICE_SEARCH_SPECIES):

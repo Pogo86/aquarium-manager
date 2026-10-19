@@ -434,3 +434,29 @@ start_water_test_timer:
               value: nitrite
             - label: NO3 / nitrate (10 minutes)
               value: nitrate
+
+update_filter:
+  name: Update filter
+  description: Save aquarium filter specifications, measured flow, basket media and maintenance settings.
+  fields:
+    entry_id:
+      name: Aquarium config entry ID
+      required: true
+      selector:
+        text:
+    filter:
+      name: Filter record
+      required: true
+      selector:
+        object:
+
+mark_filter_cleaned:
+  name: Mark filter cleaned
+  description: Record filter maintenance now and mark all current media as serviced.
+  fields:
+    entry_id:
+      name: Aquarium config entry ID
+      required: true
+      selector:
+        text:
+
