@@ -18,6 +18,7 @@ CONF_BACKUP_HEATER_ON_TEMP_C = "backup_heater_on_temp_c"
 CONF_BACKUP_HEATER_OFF_TEMP_C = "backup_heater_off_temp_c"
 CONF_BACKUP_HEATER_LOW_DELAY_MIN = "backup_heater_low_delay_min"
 CONF_BACKUP_HEATER_MAX_RUNTIME_MIN = "backup_heater_max_runtime_min"
+CONF_WATER_TEST_NOTIFY_ENTITY = "water_test_notify_entity"
 
 DEFAULT_BACKUP_HEATER_AUTOMATION_ENABLED = True
 DEFAULT_BACKUP_HEATER_ON_TEMP_C = 23.0
@@ -61,6 +62,7 @@ SERVICE_SEARCH_SPECIES = "search_species"
 SERVICE_ADD_SPECIES_TO_LIBRARY = "add_species_to_library"
 SERVICE_RESYNC_LIGHTING = "resync_lighting"
 SERVICE_UPDATE_LIGHTING_SCHEDULE = "update_lighting_schedule"
+SERVICE_START_WATER_TEST_TIMER = "start_water_test_timer"
 
 ATTR_ENTRY_ID = "entry_id"
 ATTR_STOCK_ID = "stock_id"
@@ -74,6 +76,7 @@ ATTR_NITRATE = "nitrate"
 ATTR_PH = "ph"
 ATTR_GH = "gh"
 ATTR_KH = "kh"
+ATTR_TEST_TYPE = "test_type"
 
 # Fields that can be populated from the species library and then overridden by
 # the user on an individual stocking record.

@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Add an aquarium",
-        "description": "Enter the internal aquarium dimensions. Volume will be calculated automatically from length \u00d7 width \u00d7 water depth.",
+        "description": "Enter the internal aquarium dimensions. Volume will be calculated automatically from length × width × water depth.",
         "data": {
           "tank_name": "Tank name",
           "length_cm": "Internal length",
@@ -31,7 +31,7 @@
     "step": {
       "init": {
         "title": "Aquarium options",
-        "description": "Configure the remote fish library, GitHub editing, backup heater, lighting schedule and CO2 automation.",
+        "description": "Configure the remote fish library, GitHub editing, water-test notifications, backup heater, lighting schedule and CO2 automation.",
         "data": {
           "species_library_url": "Fish library JSON URL",
           "backup_heater_switch": "Backup heater plug switch",
@@ -51,7 +51,8 @@
           "blue_light_duration_min": "Blue-light period after main photoperiod",
           "co2_lead_min": "CO2 start before lights",
           "co2_off_before_end_min": "CO2 stop before main lights end",
-          "light_mode_toggle_seconds": "Light mode power-cycle delay"
+          "light_mode_toggle_seconds": "Light mode power-cycle delay",
+          "water_test_notify_entity": "Water-test notification target (optional)"
         },
         "data_description": {
           "species_library_url": "Use the Raw GitHub URL to fish_library.json. The last valid copy is cached and refreshed every 24 hours.",
@@ -72,7 +73,8 @@
           "blue_light_duration_min": "Optional blue viewing period after the main photoperiod. CO2 is always off during blue mode.",
           "co2_lead_min": "CO2 pre-charge before the main lights. Default 120 minutes.",
           "co2_off_before_end_min": "Stops CO2 before the end of the main photoperiod. Default 60 minutes.",
-          "light_mode_toggle_seconds": "Your lamps change Full \u2192 Half \u2192 Blue by a quick plug OFF/ON cycle. This is the pause used for each cycle."
+          "light_mode_toggle_seconds": "Your lamps change Full → Half → Blue by a quick plug OFF/ON cycle. This is the pause used for each cycle.",
+          "water_test_notify_entity": "Choose a notify entity for NH3, NO2 and NO3 timer-complete alerts. If left blank, Aquarium Manager creates a persistent Home Assistant notification instead."
         }
       }
     },
@@ -86,7 +88,8 @@
       "lights_must_differ": "Light 1 and Light 2 must be different switch entities.",
       "half_exceeds_duration": "The half-light period cannot be longer than the main photoperiod.",
       "co2_off_exceeds_duration": "CO2 cannot be scheduled to stop more minutes before lights-out than the whole photoperiod.",
-      "invalid_time": "Enter a valid time as HH:MM, for example 12:00."
+      "invalid_time": "Enter a valid time as HH:MM, for example 12:00.",
+      "invalid_notify_entity": "Choose a notify.* entity."
     }
   }
 }

@@ -1,5 +1,13 @@
 # Aquarium Manager
 
+## v0.9.3 highlights
+
+- Desktop tabs use a two-column layout while the existing mobile layout remains unchanged.
+- Water readings are updated from a popup instead of a second inline set of input boxes.
+- NH₃ and NO₃ have 10-minute reagent timers; NO₂ has a 2-minute timer.
+- Timer completion can send to a configured Home Assistant `notify` entity, with a persistent-notification fallback.
+
+
 Aquarium Manager is a custom Home Assistant integration for managing a planted freshwater aquarium.
 
 ## Features
@@ -64,7 +72,7 @@ After confirming the new card loads, the old `/config/www/aquarium-manager-card.
 
 ## Releases
 
-For clean HACS update tracking, publish GitHub releases using tags that match `manifest.json`, for example `v0.9.2`.
+For clean HACS update tracking, publish GitHub releases using tags that match `manifest.json`, for example `v0.9.3`.
 
 ## Fish library
 
@@ -75,6 +83,6 @@ The species database can remain in a separate repository. Aquarium Manager accep
 MIT
 
 
-## v0.9.2
+## v0.9.3
 
 Backup heater control is now a two-option **Auto / Off** mode selector. **Off** immediately forces the configured heater plug off and keeps the fail-safe controller disabled. **Auto** returns control to the configured temperature thresholds, delay and maximum runtime.

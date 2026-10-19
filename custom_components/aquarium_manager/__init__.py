@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Callable
 from pathlib import Path
 from uuid import uuid4
 
@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
@@ -25,6 +25,7 @@ from .const import (
     ATTR_ENTRY_ID,
     ATTR_GH,
     ATTR_KH,
+    ATTR_TEST_TYPE,
     ATTR_NITRATE,
     ATTR_NITRITE,
     ATTR_PH,
@@ -39,6 +40,7 @@ from .const import (
     CONF_BACKUP_HEATER_OFF_TEMP_C,
     CONF_BACKUP_HEATER_LOW_DELAY_MIN,
     CONF_BACKUP_HEATER_MAX_RUNTIME_MIN,
+    CONF_WATER_TEST_NOTIFY_ENTITY,
     CONF_LIGHT_1_SWITCH,
     CONF_LIGHT_2_SWITCH,
     CONF_CO2_SWITCH,
@@ -75,6 +77,7 @@ from .const import (
     SERVICE_ADD_SPECIES_TO_LIBRARY,
     SERVICE_RESYNC_LIGHTING,
     SERVICE_UPDATE_LIGHTING_SCHEDULE,
+    SERVICE_START_WATER_TEST_TIMER,
     SERVICE_REMOVE_STOCK,
     SERVICE_UPDATE_STOCK,
     SIGNAL_LIBRARY_UPDATED,
@@ -105,6 +108,8 @@ class AquariumRuntimeData:
     heater_controller: BackupHeaterController | None = None
     lighting_controller: AquariumLightingController | None = None
     github_token: str = ""
+    water_test_notify_entity: str = ""
+    water_test_timer_cancels: dict[str, Callable[[], None]] = field(default_factory=dict)
 
     @property
     def github_write_ready(self) -> bool:
@@ -335,6 +340,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         }
     )
 
+    water_test_timer_schema = vol.Schema(
+        {
+            vol.Required(ATTR_ENTRY_ID): cv.string,
+            vol.Required(ATTR_TEST_TYPE): vol.In(("ammonia", "nitrite", "nitrate")),
+        }
+    )
+
     async def async_add_stock(call: ServiceCall) -> None:
         """Add a livestock record and apply a known library profile."""
         runtime = _runtime_or_raise(hass, call.data[ATTR_ENTRY_ID])
@@ -516,6 +528,65 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             f"{SIGNAL_STOCKING_UPDATED}_{runtime.entry_id}",
         )
 
+    async def async_start_water_test_timer(call: ServiceCall) -> dict[str, Any]:
+        """Start or restart a reagent-test countdown and notify when it is ready."""
+        runtime = _runtime_or_raise(hass, call.data[ATTR_ENTRY_ID])
+        test_type = str(call.data[ATTR_TEST_TYPE])
+        timers = {
+            "ammonia": (10 * 60, "NH₃", "10-minute ammonia test"),
+            "nitrite": (2 * 60, "NO₂", "2-minute nitrite test"),
+            "nitrate": (10 * 60, "NO₃", "10-minute nitrate test"),
+        }
+        duration_seconds, short_label, full_label = timers[test_type]
+
+        existing_cancel = runtime.water_test_timer_cancels.pop(test_type, None)
+        if existing_cancel is not None:
+            existing_cancel()
+
+        ends_at = datetime.now(UTC) + timedelta(seconds=duration_seconds)
+
+        async def _timer_finished(_now: Any) -> None:
+            runtime.water_test_timer_cancels.pop(test_type, None)
+            title = "Aquarium water test ready"
+            message = f"{short_label} timer finished — read the test now."
+            notified = False
+            target = runtime.water_test_notify_entity
+            if target and hass.states.get(target) is not None:
+                try:
+                    await hass.services.async_call(
+                        "notify",
+                        "send_message",
+                        {"title": title, "message": message},
+                        target={"entity_id": target},
+                        blocking=True,
+                    )
+                    notified = True
+                except Exception:
+                    notified = False
+
+            if not notified:
+                await hass.services.async_call(
+                    "persistent_notification",
+                    "create",
+                    {
+                        "title": title,
+                        "message": message,
+                        "notification_id": f"aquarium_manager_water_test_{runtime.entry_id}_{test_type}",
+                    },
+                    blocking=False,
+                )
+
+        runtime.water_test_timer_cancels[test_type] = async_call_later(
+            hass, duration_seconds, _timer_finished
+        )
+        return {
+            "test_type": test_type,
+            "label": full_label,
+            "duration_seconds": duration_seconds,
+            "ends_at": ends_at.isoformat(),
+            "notification_target": runtime.water_test_notify_entity or "Home Assistant persistent notification",
+        }
+
     async def async_search_species(call: ServiceCall) -> dict[str, Any]:
         """Search SeriouslyFish/FishBase and return a preview record."""
         runtime = _runtime_or_raise(hass, call.data[ATTR_ENTRY_ID])
@@ -608,6 +679,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             schema=water_readings_schema,
         )
 
+    if not hass.services.has_service(DOMAIN, SERVICE_START_WATER_TEST_TIMER):
+        hass.services.async_register(
+            DOMAIN, SERVICE_START_WATER_TEST_TIMER, async_start_water_test_timer,
+            schema=water_test_timer_schema, supports_response=SupportsResponse.ONLY,
+        )
+
     if not hass.services.has_service(DOMAIN, SERVICE_SEARCH_SPECIES):
         hass.services.async_register(
             DOMAIN, SERVICE_SEARCH_SPECIES, async_search_species,
@@ -645,6 +722,7 @@ async def async_setup_entry(
         entry_id=entry.entry_id,
         library_url=library_url,
         github_token=str(entry.options.get(CONF_GITHUB_TOKEN, "") or "").strip(),
+        water_test_notify_entity=str(entry.options.get(CONF_WATER_TEST_NOTIFY_ENTITY, "") or "").strip(),
     )
     await runtime.async_load()
 
@@ -736,6 +814,10 @@ async def async_unload_entry(
 ) -> bool:
     """Unload an Aquarium Manager config entry."""
     runtime = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if isinstance(runtime, AquariumRuntimeData):
+        for cancel in list(runtime.water_test_timer_cancels.values()):
+            cancel()
+        runtime.water_test_timer_cancels.clear()
     if isinstance(runtime, AquariumRuntimeData) and runtime.heater_controller is not None:
         await runtime.heater_controller.async_stop()
     if isinstance(runtime, AquariumRuntimeData) and runtime.lighting_controller is not None:

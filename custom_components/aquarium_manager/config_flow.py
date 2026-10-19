@@ -10,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     EntitySelector,
+    EntitySelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -26,6 +27,7 @@ from .const import (
     CONF_BACKUP_HEATER_OFF_TEMP_C,
     CONF_BACKUP_HEATER_LOW_DELAY_MIN,
     CONF_BACKUP_HEATER_MAX_RUNTIME_MIN,
+    CONF_WATER_TEST_NOTIFY_ENTITY,
     DEFAULT_BACKUP_HEATER_AUTOMATION_ENABLED,
     DEFAULT_BACKUP_HEATER_ON_TEMP_C,
     DEFAULT_BACKUP_HEATER_OFF_TEMP_C,
@@ -181,6 +183,7 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
         if user_input is not None:
             library_url = str(user_input.get(CONF_SPECIES_LIBRARY_URL, "") or "").strip()
             backup_switch = str(user_input.get(CONF_BACKUP_HEATER_SWITCH, "") or "").strip()
+            water_notify = str(user_input.get(CONF_WATER_TEST_NOTIFY_ENTITY, "") or "").strip()
             github_token = str(user_input.get(CONF_GITHUB_TOKEN, "") or "").strip()
             user_input[CONF_GITHUB_TOKEN] = github_token
             light_1 = str(user_input.get(CONF_LIGHT_1_SWITCH, "") or "").strip()
@@ -200,6 +203,8 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
                 errors[CONF_SPECIES_LIBRARY_URL] = "invalid_url"
             elif backup_switch and not backup_switch.startswith("switch."):
                 errors[CONF_BACKUP_HEATER_SWITCH] = "invalid_switch"
+            elif water_notify and not water_notify.startswith("notify."):
+                errors[CONF_WATER_TEST_NOTIFY_ENTITY] = "invalid_notify_entity"
             elif enabled and not backup_switch:
                 errors[CONF_BACKUP_HEATER_SWITCH] = "heater_required"
             elif enabled and not self.config_entry.data.get(CONF_TEMPERATURE_ENTITY):
@@ -225,6 +230,7 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
         current_url = str(self.config_entry.options.get(CONF_SPECIES_LIBRARY_URL, "") or "")
         current_github_token = str(self.config_entry.options.get(CONF_GITHUB_TOKEN, "") or "")
         current_backup_switch = str(self.config_entry.options.get(CONF_BACKUP_HEATER_SWITCH, "") or "")
+        current_water_notify = str(self.config_entry.options.get(CONF_WATER_TEST_NOTIFY_ENTITY, "") or "")
         current_light_1 = str(self.config_entry.options.get(CONF_LIGHT_1_SWITCH, "") or "")
         current_light_2 = str(self.config_entry.options.get(CONF_LIGHT_2_SWITCH, "") or "")
         current_co2 = str(self.config_entry.options.get(CONF_CO2_SWITCH, "") or "")
@@ -262,6 +268,9 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
                 TextSelectorConfig(type=TextSelectorType.PASSWORD, autocomplete="current-password")
             ),
             vol.Optional(CONF_BACKUP_HEATER_SWITCH, default=current_backup_switch): EntitySelector(),
+            vol.Optional(CONF_WATER_TEST_NOTIFY_ENTITY, default=current_water_notify): EntitySelector(
+                EntitySelectorConfig(domain="notify")
+            ),
             vol.Optional(
                 CONF_BACKUP_HEATER_AUTOMATION_ENABLED,
                 default=current_enabled,

@@ -412,3 +412,25 @@ update_lighting_schedule:
           max: 360
           step: 5
           unit_of_measurement: min
+
+start_water_test_timer:
+  name: Start water-test timer
+  description: Start or restart the reagent wait timer for NH3, NO2 or NO3. A Home Assistant notification is sent when the timer completes.
+  fields:
+    entry_id:
+      name: Aquarium config entry ID
+      required: true
+      selector:
+        text:
+    test_type:
+      name: Test
+      required: true
+      selector:
+        select:
+          options:
+            - label: NH3 / ammonia (10 minutes)
+              value: ammonia
+            - label: NO2 / nitrite (2 minutes)
+              value: nitrite
+            - label: NO3 / nitrate (10 minutes)
+              value: nitrate

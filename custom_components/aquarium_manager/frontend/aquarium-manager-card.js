@@ -9,6 +9,8 @@ class AquariumManagerCard extends HTMLElement {
     this._modalMode = null;
     this._activeTab = "overview";
     this._speciesSearchResult = null;
+    this._waterTestTimers = {};
+    this._waterTimerTicker = null;
   }
 
   static getStubConfig() {
@@ -32,6 +34,13 @@ class AquariumManagerCard extends HTMLElement {
     if (!this._config) return;
     if (!this._built) this._build();
     this._update();
+  }
+
+  disconnectedCallback() {
+    if (this._waterTimerTicker) {
+      window.clearInterval(this._waterTimerTicker);
+      this._waterTimerTicker = null;
+    }
   }
 
   getCardSize() { return 11; }
@@ -100,7 +109,7 @@ class AquariumManagerCard extends HTMLElement {
   _build() {
     this.shadowRoot.innerHTML = `
       <style>
-        :host{display:block;width:100%;max-width:100%;min-width:0;overflow:hidden} *{box-sizing:border-box} ha-card{width:100%;max-width:100%;min-width:0;overflow:hidden;color:var(--primary-text-color);background:var(--ha-card-background,var(--card-background-color))}
+        :host{display:block;width:100%;max-width:100%;min-width:0;overflow:hidden} *{box-sizing:border-box} ha-card{width:100%;max-width:100%;min-width:0;overflow:hidden;container-type:inline-size;color:var(--primary-text-color);background:var(--ha-card-background,var(--card-background-color))}
         .hero{padding:20px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary-color) 18%,transparent),transparent 62%);border-bottom:1px solid var(--divider-color)}
         .hero-top,.title-wrap,.section-title,.stock-meta,.modal-actions{display:flex;align-items:center}.hero-top{justify-content:space-between;gap:14px}.title-wrap{gap:12px}
         .tank-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:13px;background:color-mix(in srgb,var(--primary-color) 15%,transparent)}
@@ -128,6 +137,17 @@ class AquariumManagerCard extends HTMLElement {
         .modal-head{position:sticky;top:0;background:var(--card-background-color);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:17px 18px 12px;border-bottom:1px solid var(--divider-color);z-index:1}.modal-title{font-size:18px;font-weight:700}.modal-subtitle{font-size:12px;color:var(--secondary-text-color);font-style:italic;margin-top:3px}.icon-btn{padding:5px;display:grid;place-items:center;background:transparent}.icon-btn ha-icon{--mdc-icon-size:20px}.modal-body{padding:16px 18px 18px}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.detail{border:1px solid var(--divider-color);border-radius:10px;padding:10px}.detail-label{font-size:10px;text-transform:uppercase;color:var(--secondary-text-color)}.detail-value{font-size:13px;font-weight:600;margin-top:4px}.modal-section{margin-top:16px}.modal-section-title{font-size:12px;font-weight:700;margin-bottom:8px}.care-note{font-size:12px;line-height:1.4;padding:8px 10px;background:var(--secondary-background-color);border-radius:8px;margin-top:5px}.modal-actions{justify-content:flex-end;gap:8px;margin-top:18px}.primary{background:var(--primary-color);color:var(--text-primary-color,#fff);border-color:var(--primary-color);font-weight:650}.danger-btn{color:var(--error-color);margin-right:auto}
         .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.form-field label{display:block;font-size:10px;color:var(--secondary-text-color);margin-bottom:4px}.form-field.full{grid-column:1/-1}.pair{display:grid;grid-template-columns:1fr 1fr;gap:7px}.small-help{font-size:10px;color:var(--secondary-text-color);margin-top:5px}.footer{margin-top:18px;padding-top:12px;border-top:1px solid var(--divider-color);font-size:10px;line-height:1.4;color:var(--secondary-text-color)}
         .tabs{display:flex;gap:5px;padding:8px 12px;border-bottom:1px solid var(--divider-color);background:var(--secondary-background-color);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch;max-width:100%}.tabs::-webkit-scrollbar{display:none}.tab-btn{flex:0 0 auto;min-height:42px;padding:9px 12px;background:transparent;border-color:transparent;font-size:12px;font-weight:650;color:var(--secondary-text-color);white-space:nowrap}.tab-btn.active{background:var(--card-background-color);color:var(--primary-color);border-color:var(--divider-color);box-shadow:0 1px 2px rgba(0,0,0,.06)}.tab-page{display:none;min-width:0;max-width:100%}.tab-page.active{display:block}
+        .section-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}.section-title-row .section-title{margin-bottom:0}.water-value{border:1px solid var(--divider-color);border-radius:10px;padding:10px;background:var(--secondary-background-color);min-width:0}.water-value-main{font-size:18px;font-weight:650;margin-top:5px;overflow-wrap:anywhere}.water-value-label{font-size:11px;color:var(--secondary-text-color)}.water-update-btn{background:var(--primary-color);color:var(--text-primary-color,#fff);border:0;font-weight:700;padding:8px 11px;white-space:nowrap}.water-last-test{font-size:11px;color:var(--secondary-text-color);margin-top:9px}.water-test-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.water-test-field{min-width:0}.water-test-field>label{display:block;font-size:10px;color:var(--secondary-text-color);margin-bottom:4px}.water-test-input-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:stretch}.water-test-input-row.no-timer{grid-template-columns:1fr}.test-timer-btn{min-width:98px;font-weight:700;color:var(--primary-color);white-space:nowrap}.test-timer-btn.running{color:var(--warning-color,#f9a825);border-color:color-mix(in srgb,var(--warning-color,#f9a825) 50%,var(--divider-color))}.water-test-note{font-size:10px;line-height:1.4;color:var(--secondary-text-color);margin-bottom:12px}.water-test-message{font-size:11px;color:var(--secondary-text-color);min-height:16px}
+        @container (min-width:780px){
+          .tab-page.active{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;align-items:start}
+          .tab-page.active>.section{margin-top:0;min-width:0}
+          .tab-page.active>.footer{grid-column:1/-1;margin-top:0}
+          .tab-page.active .community-grid,.tab-page.active .assessment-grid,.tab-page.active .source-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+          #tab_water>.section:nth-of-type(3){grid-column:1/-1}
+          #tab_compat.active,#tab_library.active{display:block}
+          #tab_compat .compat-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+          #tab_library .species-preview{max-width:none}
+        }
         .compat-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.compat-count{font-size:11px;color:var(--secondary-text-color);white-space:nowrap}.compat-list{display:flex;flex-direction:column;gap:7px}.compat-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--divider-color);border-radius:11px;padding:10px 11px;cursor:pointer}.compat-row:hover{background:var(--secondary-background-color)}.compat-main{min-width:0}.compat-main strong{display:block;font-size:13px}.compat-sub{font-size:10px;color:var(--secondary-text-color);margin-top:3px;line-height:1.35}.compat-side{display:flex;align-items:center;gap:7px}.match-pill,.add-count{font-size:10px;font-weight:700;padding:4px 7px;border-radius:999px;background:var(--secondary-background-color);white-space:nowrap}.match-pill.high{color:var(--success-color,#43a047)}.match-pill.medium{color:var(--warning-color,#f9a825)}.match-pill.limited{color:var(--secondary-text-color)}.compat-add{font-weight:650;color:var(--primary-color)}
         .group-list{display:flex;flex-direction:column;gap:7px}.group-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 11px;border:1px solid var(--divider-color);border-radius:11px}.group-title{font-size:13px;font-weight:650}.group-sub{font-size:10px;color:var(--secondary-text-color);margin-top:3px}.add-count{color:var(--warning-color,#f9a825);font-size:11px}.bioload-note{margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--secondary-background-color);font-size:10px;line-height:1.4;color:var(--secondary-text-color)}
         .assessment-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.assessment-card{border:1px solid var(--divider-color);border-radius:11px;padding:11px;min-width:0}.assessment-label{font-size:10px;text-transform:uppercase;color:var(--secondary-text-color)}.assessment-value{font-size:14px;font-weight:650;margin-top:4px;overflow-wrap:anywhere}.assessment-note{font-size:9px;line-height:1.3;color:var(--secondary-text-color);margin-top:3px}
@@ -149,6 +169,7 @@ class AquariumManagerCard extends HTMLElement {
           details.stock-panel summary{align-items:flex-start}.stock-meta{flex-wrap:wrap;justify-content:flex-end;text-align:right}.library-bar{align-items:flex-start;flex-wrap:wrap}.library-info{white-space:normal;overflow-wrap:anywhere;flex:1 1 180px}.library-refresh{min-height:40px}
           .equipment-row{align-items:flex-start;flex-wrap:wrap}.equipment-toggle,.heater-mode-toggle{width:100%;min-height:44px}.lighting-actions{display:grid;grid-template-columns:1fr}.lighting-actions button,.lighting-save,.reading-submit-btn{width:100%;min-height:44px}
           .reading-actions,.lighting-save-row{display:grid;grid-template-columns:1fr}.reading-submit-btn,.lighting-save{grid-row:auto}.reading-message,.lighting-save-message{min-width:0}
+          .section-title-row{align-items:flex-start;flex-wrap:wrap}.water-update-btn{width:100%;min-height:44px}.water-test-grid{grid-template-columns:1fr}.water-test-input-row{grid-template-columns:minmax(0,1fr) auto}.test-timer-btn{min-height:44px;min-width:104px}
           input,textarea,select{font-size:16px}.lighting-field input{font-size:16px}.parameter input{font-size:18px}
           .species-actions,.modal-actions{display:grid;grid-template-columns:1fr;width:100%}.species-actions button,.modal-actions button{width:100%;min-height:44px}.danger-btn{margin-right:0}
           .warning-line{overflow-wrap:anywhere}.small-help,.footer,.equipment-sub,.lighting-reason,.compat-sub,.group-sub,.bioload-note{overflow-wrap:anywhere}
@@ -196,17 +217,13 @@ class AquariumManagerCard extends HTMLElement {
           </div>
 
           <div id="tab_water" class="tab-page" role="tabpanel">
-            <section class="section"><div class="section-title"><ha-icon icon="mdi:test-tube"></ha-icon>Current aquarium water</div><div class="parameter-grid">
-              ${this._numberBox("ammonia","NH₃ / NH₄","mg/L","0.01")}${this._numberBox("nitrite","NO₂","mg/L","0.01")}${this._numberBox("nitrate","NO₃","mg/L","0.5")}${this._numberBox("ph","pH","","0.1")}${this._numberBox("gh","GH","dGH","1")}${this._numberBox("kh","KH","dKH","1")}
-            </div><div id="water_warning" class="water-warning"></div></section>
-
-            <section class="section"><div class="section-title"><ha-icon icon="mdi:clipboard-edit-outline"></ha-icon>Submit new water readings</div>
-              <div class="reading-submit"><div class="small-help">Enter one complete water test. All six values are validated before Aquarium Manager updates the current readings.</div>
-                <div class="reading-submit-grid">
-                  ${this._readingBox("ammonia","NH₃ / NH₄","mg/L","0.01")}${this._readingBox("nitrite","NO₂","mg/L","0.01")}${this._readingBox("nitrate","NO₃","mg/L","0.5")}${this._readingBox("ph","pH","","0.1")}${this._readingBox("gh","GH","dGH","1")}${this._readingBox("kh","KH","dKH","1")}
-                </div>
-                <div class="reading-actions"><div id="last_water_test" class="reading-message">No submitted test recorded</div><button id="submit_water_readings" class="reading-submit-btn">Submit readings</button></div>
+            <section class="section">
+              <div class="section-title-row"><div class="section-title"><ha-icon icon="mdi:test-tube"></ha-icon>Current aquarium water</div><button id="open_water_readings" class="water-update-btn">Update readings</button></div>
+              <div class="parameter-grid">
+                ${this._waterValueBox("ammonia","NH₃ / NH₄","mg/L")}${this._waterValueBox("nitrite","NO₂","mg/L")}${this._waterValueBox("nitrate","NO₃","mg/L")}${this._waterValueBox("ph","pH","")}${this._waterValueBox("gh","GH","dGH")}${this._waterValueBox("kh","KH","dKH")}
               </div>
+              <div id="last_water_test" class="water-last-test">No submitted test recorded</div>
+              <div id="water_warning" class="water-warning"></div>
             </section>
 
             <section class="section"><div class="section-title"><ha-icon icon="mdi:home-water"></ha-icon>Source water</div><div class="source-grid">
@@ -301,7 +318,7 @@ class AquariumManagerCard extends HTMLElement {
     for (const id of ["lighting_input_enabled","lighting_input_on","lighting_input_duration","lighting_input_half","lighting_input_blue","lighting_input_co2_lead","lighting_input_co2_off"]) {
       this.shadowRoot.getElementById(id)?.addEventListener("input", e => { e.currentTarget.dataset.dirty = "1"; this._renderLightingPreview(); });
     }
-    this.shadowRoot.getElementById("submit_water_readings").addEventListener("click", () => this._submitWaterReadings());
+    this.shadowRoot.getElementById("open_water_readings").addEventListener("click", () => this._openWaterReadings());
     for (const tab of ["overview","water","stocking","equipment","compat","library"]) {
       this.shadowRoot.getElementById(`tab_btn_${tab}`)?.addEventListener("click", () => this._setTab(tab));
     }
@@ -312,7 +329,7 @@ class AquariumManagerCard extends HTMLElement {
   }
 
   _numberBox(key,label,unit,step){return `<div class="parameter"><div class="param-head"><span class="param-name">${label}</span><span class="param-unit">${unit}</span></div><input data-key="${key}" type="number" inputmode="decimal" step="${step}" placeholder="—"></div>`;}
-  _readingBox(key,label,unit,step){return `<div class="parameter"><div class="param-head"><span class="param-name">${label}</span><span class="param-unit">${unit}</span></div><input data-reading-key="${key}" type="number" inputmode="decimal" step="${step}" placeholder="New"></div>`;}
+  _waterValueBox(key,label,unit){return `<div class="water-value"><div class="water-value-label">${label}${unit ? ` · ${unit}` : ""}</div><div id="water_value_${key}" class="water-value-main">—</div></div>`;}
 
   _update() {
     if (!this._built || !this._hass) return;
@@ -322,6 +339,10 @@ class AquariumManagerCard extends HTMLElement {
     this._setText("gh_delta", this._signedDisplay(this._sensorEntity("gh_delta")));
     this._setText("kh_delta", this._signedDisplay(this._sensorEntity("kh_delta")));
     this._setText("nitrate_delta", this._signedDisplay(this._sensorEntity("nitrate_delta")));
+
+    for (const key of ["ammonia","nitrite","nitrate","ph","gh","kh"]) {
+      this._setText(`water_value_${key}`, this._display(this._numberEntity(key)));
+    }
 
     const active = this.shadowRoot.activeElement;
     this.shadowRoot.querySelectorAll("input[data-key]").forEach(input => {
@@ -608,14 +629,94 @@ class AquariumManagerCard extends HTMLElement {
     el.textContent = Number.isNaN(d.getTime()) ? `Last submitted: ${stamp}` : `Last submitted: ${d.toLocaleString()}`;
   }
 
+  _waterReadingField(key, label, unit, step, timerType=null, timerLabel="") {
+    const state = this._state(this._numberEntity(key));
+    const current = state && !["unknown","unavailable"].includes(state.state) ? `Current ${state.state}${unit ? ` ${unit}` : ""}` : "Enter result";
+    const timer = timerType ? `<button type="button" class="test-timer-btn" data-test-timer="${timerType}" data-base-label="${timerLabel}">${timerLabel}</button>` : "";
+    return `<div class="water-test-field"><label>${label}${unit ? ` · ${unit}` : ""}</label><div class="water-test-input-row ${timerType ? "" : "no-timer"}"><input data-reading-key="${key}" type="number" inputmode="decimal" step="${step}" placeholder="${this._escape(current)}">${timer}</div></div>`;
+  }
+
+  _openWaterReadings() {
+    this._modalMode = "water-readings";
+    this._showModal(`
+      <div class="modal-head"><div><div class="modal-title">Update water readings</div><div class="modal-subtitle">One complete aquarium water-test snapshot</div></div><button class="icon-btn" data-close><ha-icon icon="mdi:close"></ha-icon></button></div>
+      <div class="modal-body">
+        <div class="water-test-note">Enter all six results, then submit them together. The reagent timers run in Home Assistant, so they keep running even if you close this popup or leave the dashboard.</div>
+        <div class="water-test-grid">
+          ${this._waterReadingField("ammonia","NH₃ / NH₄","mg/L","0.01","ammonia","Start 10 min")}
+          ${this._waterReadingField("nitrite","NO₂","mg/L","0.01","nitrite","Start 2 min")}
+          ${this._waterReadingField("nitrate","NO₃","mg/L","0.5","nitrate","Start 10 min")}
+          ${this._waterReadingField("ph","pH","","0.1")}
+          ${this._waterReadingField("gh","GH","dGH","1")}
+          ${this._waterReadingField("kh","KH","dKH","1")}
+        </div>
+        <div id="water_test_message" class="water-test-message" style="margin-top:12px"></div>
+        <div class="modal-actions"><button data-close>Cancel</button><button id="water_submit_readings" class="primary">Submit readings</button></div>
+      </div>`);
+    const modal = this.shadowRoot.getElementById("modal");
+    modal.querySelector("#water_submit_readings")?.addEventListener("click", () => this._submitWaterReadings());
+    modal.querySelectorAll("[data-test-timer]").forEach(button => button.addEventListener("click", () => this._startWaterTestTimer(button.dataset.testTimer)));
+    this._updateWaterTimerButtons();
+  }
+
+  async _startWaterTestTimer(testType) {
+    const { entryId } = this._stockData();
+    if (!entryId) return;
+    const modal = this.shadowRoot.getElementById("modal");
+    const button = modal?.querySelector(`[data-test-timer="${testType}"]`);
+    const message = modal?.querySelector("#water_test_message");
+    if (button) button.disabled = true;
+    try {
+      const response = await this._callResponseService("start_water_test_timer", { entry_id: entryId, test_type: testType });
+      const endsAt = Date.parse(response.ends_at || "");
+      if (Number.isFinite(endsAt)) this._waterTestTimers[testType] = { endsAt };
+      if (message) message.textContent = `${response.label || "Water-test timer"} started. Alert target: ${response.notification_target || "Home Assistant"}.`;
+      this._ensureWaterTimerTicker();
+      this._updateWaterTimerButtons();
+    } catch (err) {
+      if (message) message.textContent = err?.message || "Could not start timer";
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  _ensureWaterTimerTicker() {
+    if (this._waterTimerTicker) return;
+    this._waterTimerTicker = window.setInterval(() => this._updateWaterTimerButtons(), 1000);
+  }
+
+  _updateWaterTimerButtons() {
+    const now = Date.now();
+    let active = 0;
+    const modal = this.shadowRoot.getElementById("modal");
+    for (const [testType, timer] of Object.entries(this._waterTestTimers)) {
+      const remaining = Math.max(0, Math.ceil((timer.endsAt - now) / 1000));
+      const button = modal?.querySelector(`[data-test-timer="${testType}"]`);
+      if (remaining <= 0) {
+        delete this._waterTestTimers[testType];
+        if (button) { button.textContent = button.dataset.baseLabel || "Start timer"; button.classList.remove("running"); }
+        continue;
+      }
+      active += 1;
+      const min = Math.floor(remaining / 60);
+      const sec = String(remaining % 60).padStart(2,"0");
+      if (button) { button.textContent = `${min}:${sec}`; button.classList.add("running"); }
+    }
+    if (!active && this._waterTimerTicker) {
+      window.clearInterval(this._waterTimerTicker);
+      this._waterTimerTicker = null;
+    }
+  }
+
   async _submitWaterReadings() {
     const { entryId } = this._stockData();
-    const button = this.shadowRoot.getElementById("submit_water_readings");
-    const message = this.shadowRoot.getElementById("last_water_test");
+    const modal = this.shadowRoot.getElementById("modal");
+    const button = modal?.querySelector("#water_submit_readings");
+    const message = modal?.querySelector("#water_test_message");
     if (!entryId || !button) return;
     const values = {};
     let invalid = false;
-    this.shadowRoot.querySelectorAll("input[data-reading-key]").forEach(input => {
+    modal.querySelectorAll("input[data-reading-key]").forEach(input => {
       const value = Number(input.value);
       if (input.value.trim() === "" || Number.isNaN(value)) invalid = true;
       values[input.dataset.readingKey] = value;
@@ -629,10 +730,9 @@ class AquariumManagerCard extends HTMLElement {
     button.textContent = "Submitting…";
     try {
       await this._hass.callService("aquarium_manager", "submit_water_readings", { entry_id: entryId, ...values });
-      this.shadowRoot.querySelectorAll("input[data-reading-key]").forEach(input => input.value = "");
       button.textContent = "Submitted ✓";
       if (message) message.textContent = "Water readings submitted";
-      window.setTimeout(() => { if (button) button.textContent = previous; }, 1800);
+      window.setTimeout(() => this._closeModal(), 650);
     } catch (err) {
       button.textContent = "Failed";
       if (message) message.textContent = err?.message || "Could not submit readings";
