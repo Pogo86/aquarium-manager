@@ -16,6 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AquariumManagerConfigEntry
+from .filtering import filter_summary
 from .const import (
     CONF_LENGTH_CM,
     CONF_TANK_NAME,
@@ -29,6 +30,7 @@ from .const import (
     SIGNAL_LIBRARY_UPDATED,
     SIGNAL_HEATER_UPDATED,
     SIGNAL_LIGHTING_UPDATED,
+    SIGNAL_FILTER_UPDATED,
     SIGNAL_STOCKING_UPDATED,
 )
 
@@ -49,6 +51,7 @@ async def async_setup_entry(
         AquariumWaterStatusSensor(entry),
         AquariumBackupHeaterAutomationSensor(entry),
         AquariumLightingAutomationSensor(entry),
+        AquariumFilterSensor(entry),
         AquariumDeltaSensor(
             entry,
             key="gh_delta",
@@ -389,6 +392,35 @@ def _stocking_assessment(
             water_issues.append(message)
             issues.append({"severity": "warning", "message": message})
 
+    tank_volume_l = _tank_volume_l(entry)
+    filtration = filter_summary(entry.runtime_data.filter_data, tank_volume_l)
+    if filtration["sizing_status"] == "above_manufacturer_range":
+        issues.append({
+            "severity": "warning",
+            "message": (
+                f"Filter is rated up to {filtration['rated_tank_max_l']:g} L, below this "
+                f"aquarium's {tank_volume_l:g} L calculated water volume."
+            ),
+        })
+    if filtration["flow_status"] == "low":
+        issues.append({
+            "severity": "warning",
+            "message": (
+                f"Filter turnover is about {filtration['turnover_per_hour']:g}×/h, "
+                "which is low for circulation and distribution."
+            ),
+        })
+    if not filtration["biological_media_present"]:
+        issues.append({
+            "severity": "warning",
+            "message": "No biological filter media is recorded.",
+        })
+    if filtration["maintenance_status"] == "overdue":
+        issues.append({
+            "severity": "warning",
+            "message": "Filter maintenance is overdue.",
+        })
+
     safe_group = [item for item in group_recommendations if item.get("safe_to_add")]
     blocked_group = [item for item in group_recommendations if not item.get("safe_to_add")]
 
@@ -459,11 +491,24 @@ def _stocking_assessment(
         "community_conflicts": conflicts,
         "current_water_issue_count": len(water_issues),
         "issues": issues,
-        "filtration_status": "not_assessed",
-        "filtration_note": (
-            "Filtration is not assessed yet because Aquarium Manager does not currently "
-            "store filter flow/capacity."
+        "filtration_status": (
+            "attention"
+            if filtration["sizing_status"] == "above_manufacturer_range"
+            or filtration["flow_status"] == "low"
+            or not filtration["biological_media_present"]
+            or filtration["maintenance_status"] == "overdue"
+            else "good"
         ),
+        "filtration_note": (
+            f"{filtration['manufacturer']} {filtration['model']} · "
+            + (
+                f"{filtration['turnover_per_hour']:g}×/h "
+                f"({filtration['flow_source']} flow)"
+                if filtration["turnover_per_hour"] is not None
+                else "turnover unavailable"
+            )
+        ),
+        "filtration": filtration,
         "bioload_note": (
             "Relative bioload is a comparison index, not a safe maximum or stocking percentage."
         ),
@@ -1172,6 +1217,46 @@ class AquariumCompatibilitySensor(AquariumBaseSensor):
             "bioload_method": "Relative index: quantity × adult length³ ÷ 100",
             "tank_volume_l": round(_tank_volume_l(self._entry), 1),
         }
+
+
+class AquariumFilterSensor(AquariumBaseSensor):
+    """Expose configured filter, turnover, media and maintenance state."""
+
+    _attr_name = "Filter"
+    _attr_icon = "mdi:air-filter"
+
+    def __init__(self, entry: AquariumManagerConfigEntry) -> None:
+        super().__init__(entry, "filter")
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SIGNAL_FILTER_UPDATED}_{self._entry.entry_id}",
+                self.async_write_ha_state,
+            )
+        )
+
+    @property
+    def native_value(self) -> str:
+        data = self._entry.runtime_data.filter_data
+        manufacturer = str(data.get("manufacturer") or "").strip()
+        model = str(data.get("model") or "").strip()
+        return " ".join(part for part in (manufacturer, model) if part) or "Configured"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        volume = _tank_volume_l(self._entry)
+        summary = filter_summary(self._entry.runtime_data.filter_data, volume)
+        return {
+            "config_entry_id": self._entry.entry_id,
+            "filter": self._entry.runtime_data.filter_data,
+            "summary": summary,
+            "tank_volume_l": round(volume, 1),
+            **summary,
+        }
+
 
 
 class AquariumBackupHeaterAutomationSensor(AquariumBaseSensor):
