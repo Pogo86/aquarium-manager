@@ -489,7 +489,7 @@ class AquariumManagerCard extends HTMLElement {
       '<div class="filter-editor-field"><label>Basket media volume (L)</label><input id="filter_media_volume" type="number" min="0" step="0.1" value="' + this._escape(filter.media_basket_volume_l ?? "") + '"></div>' +
       '</div>' + stageHtml +
       '<div class="modal-actions"><button id="filter_cancel" type="button">Cancel</button><button id="filter_save" type="button" class="primary">Save filter</button></div>';
-    backdrop.classList.add("show");
+    backdrop.classList.add("open");
     modal.querySelector("#filter_cancel")?.addEventListener("click", () => this._closeModal());
     modal.querySelector("#filter_save")?.addEventListener("click", () => this._saveFilterEditor(filter, stages));
   }
