@@ -529,7 +529,7 @@ class AquariumManagerCard extends HTMLElement {
     const button = modal.querySelector("#filter_save");
     if (button) button.disabled = true;
     try {
-      await this._hass.callService("aquarium_manager","update_filter",{entry_id:entryId,filter:updated}, {}, true, true);
+      await this._callResponseService("update_filter", { entry_id: entryId, filter: updated });
       this._closeModal();
     } catch (err) {
       if (button) button.disabled = false;
@@ -543,7 +543,7 @@ class AquariumManagerCard extends HTMLElement {
     const button = this.shadowRoot.getElementById("mark_filter_cleaned");
     if (button) button.disabled = true;
     try {
-      await this._hass.callService("aquarium_manager","mark_filter_cleaned",{entry_id:entryId}, {}, true, true);
+      await this._callResponseService("mark_filter_cleaned", { entry_id: entryId });
     } finally {
       window.setTimeout(() => { if (button) button.disabled = false; this._update(); }, 200);
     }
