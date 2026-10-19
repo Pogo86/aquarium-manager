@@ -469,6 +469,15 @@ def _stocking_assessment(
         status = "attention"
         label = "Group-size improvements suggested"
         main_constraint = "Group sizes"
+    elif (
+        filtration["sizing_status"] == "above_manufacturer_range"
+        or filtration["flow_status"] == "low"
+        or not filtration["biological_media_present"]
+        or filtration["maintenance_status"] == "overdue"
+    ):
+        status = "attention"
+        label = "Filtration needs attention"
+        main_constraint = "Filtration"
     elif bioload["coverage_percent"] < 100 or profile_gaps:
         status = "incomplete"
         label = "Assessment incomplete"
