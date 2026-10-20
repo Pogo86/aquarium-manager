@@ -96,3 +96,11 @@ Backup heater control is now a two-option **Auto / Off** mode selector. **Off** 
 - Adds filter maintenance tracking and a **Mark filter cleaned** action.
 - Feeds filtration condition into the stocking assessment without treating filter capacity as permission to overstock.
 
+## v0.9.6 attention navigation
+
+- Makes the top-right aquarium status chip hoverable on desktop.
+- Shows current water, stocking, filtration, heater and lighting attention items in a compact popover.
+- Clicking an attention item jumps to the relevant Aquarium Manager tab and section.
+- Clicking the main status chip jumps to the highest-priority attention item.
+- Mobile keeps simple tap-to-navigate behavior without relying on hover.
+

@@ -119,6 +119,19 @@ class AquariumManagerCard extends HTMLElement {
         .status.clear,.status.good{color:var(--success-color,#43a047);background:color-mix(in srgb,var(--success-color,#43a047) 16%,transparent)}
         .status.attention,.status.incomplete{color:var(--warning-color,#f9a825);background:color-mix(in srgb,var(--warning-color,#f9a825) 16%,transparent)}
         .status.danger,.status.conflict{color:var(--error-color);background:color-mix(in srgb,var(--error-color) 16%,transparent)}
+        .attention-wrap{position:relative;flex:0 0 auto;z-index:20}
+        .attention-main{border:0;cursor:pointer;min-height:30px;display:inline-flex;align-items:center;justify-content:center}
+        .attention-main:focus-visible{outline:2px solid var(--primary-color);outline-offset:2px}
+        .attention-popover{position:absolute;right:0;top:calc(100% + 8px);width:min(380px,calc(100vw - 32px));padding:10px;border:1px solid var(--divider-color);border-radius:12px;background:var(--card-background-color);box-shadow:0 10px 30px rgba(0,0,0,.24);opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .14s ease,transform .14s ease,visibility .14s;pointer-events:none}
+        .attention-wrap:hover .attention-popover,.attention-wrap:focus-within .attention-popover{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
+        .attention-popover-title{font-size:11px;font-weight:700;margin-bottom:7px}
+        .attention-popover-empty{font-size:11px;color:var(--secondary-text-color);padding:4px 2px}
+        .attention-item{display:block;width:100%;text-align:left;border:0;background:transparent;padding:8px;border-radius:8px;color:var(--primary-text-color);cursor:pointer}
+        .attention-item:hover,.attention-item:focus-visible{background:var(--secondary-background-color)}
+        .attention-item-head{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--secondary-text-color)}
+        .attention-item-message{font-size:11px;line-height:1.35;margin-top:3px;text-transform:none;font-weight:500}
+        .attention-item.danger .attention-item-head{color:var(--error-color)}
+        .attention-item.warning .attention-item-head,.attention-item.attention .attention-item-head{color:var(--warning-color,#f9a825)}
         .summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:16px}.summary-item{padding:10px;border:1px solid var(--divider-color);border-radius:11px;background:color-mix(in srgb,var(--card-background-color) 80%,transparent)}
         .summary-label{font-size:10px;text-transform:uppercase;color:var(--secondary-text-color);margin-bottom:4px}.summary-value{font-size:15px;font-weight:650}
         .content{padding:18px 20px 22px;min-width:0;max-width:100%;overflow:hidden}.section{min-width:0;max-width:100%}.section+.section{margin-top:24px}.section-title{gap:7px;font-size:14px;font-weight:650;margin-bottom:11px;min-width:0;flex-wrap:wrap}.section-title ha-icon{--mdc-icon-size:18px;color:var(--secondary-text-color)}
@@ -188,6 +201,7 @@ class AquariumManagerCard extends HTMLElement {
           .species-actions,.modal-actions{display:grid;grid-template-columns:1fr;width:100%}.species-actions button,.modal-actions button{width:100%;min-height:44px}.danger-btn{margin-right:0}
           .warning-line{overflow-wrap:anywhere}.small-help,.footer,.equipment-sub,.lighting-reason,.compat-sub,.group-sub,.bioload-note{overflow-wrap:anywhere}
           .filter-metrics,.filter-stages,.filter-editor-grid{grid-template-columns:1fr}.filter-actions{display:grid;grid-template-columns:1fr}.filter-actions button{width:100%;min-height:44px}
+          .attention-popover{display:none}.attention-main{min-height:36px}
         }
         @media(max-width:360px){.summary,.community-grid,.assessment-grid,.schedule-grid{grid-template-columns:1fr}.hero-top{align-items:flex-start}.tank-icon{width:40px;height:40px}.tabs{padding-left:8px;padding-right:8px}.content{padding-left:10px;padding-right:10px}}
       </style>
@@ -196,7 +210,10 @@ class AquariumManagerCard extends HTMLElement {
         <div class="hero">
           <div class="hero-top">
             <div class="title-wrap"><div class="tank-icon"><ha-icon icon="mdi:fishbowl-outline"></ha-icon></div><div><h1>${this._escape(this._config.tank_name)}</h1><div class="subline">Aquarium Manager</div></div></div>
-            <div id="water_status" class="status">—</div>
+            <div class="attention-wrap">
+              <button id="attention_status" class="status attention-main" type="button" aria-label="Aquarium status">—</button>
+              <div id="attention_popover" class="attention-popover" role="tooltip"></div>
+            </div>
           </div>
           <div class="summary">
             <div class="summary-item"><div class="summary-label">Temperature</div><div id="temperature" class="summary-value">—</div></div>
@@ -333,6 +350,7 @@ class AquariumManagerCard extends HTMLElement {
     });
     this.shadowRoot.getElementById("add_fish").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); this._openEdit(null); });
     this.shadowRoot.getElementById("refresh_library").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); this._refreshLibrary(); });
+    this.shadowRoot.getElementById("attention_status").addEventListener("click", () => this._openPrimaryAttention());
     this.shadowRoot.getElementById("backup_heater_mode_auto").addEventListener("click", () => this._setBackupHeaterMode("Auto"));
     this.shadowRoot.getElementById("backup_heater_mode_off").addEventListener("click", () => this._setBackupHeaterMode("Off"));
     this.shadowRoot.getElementById("edit_filter").addEventListener("click", () => this._openFilterEditor());
@@ -378,7 +396,6 @@ class AquariumManagerCard extends HTMLElement {
     });
 
     const water = this._state(this._sensorEntity("water_status"));
-    this._setStatus("water_status", water?.state || "unknown");
     this._renderBackupHeater();
     this._renderLighting();
     this._renderFilter();
@@ -393,9 +410,149 @@ class AquariumManagerCard extends HTMLElement {
     this._renderLibrary();
     this._renderStocking();
     this._renderCompatibility();
+    this._renderAttentionStatus();
     this._setTab(this._activeTab);
   }
 
+
+  _attentionTargetForMessage(message, fallbackTab = "overview") {
+    const text = String(message || "").toLowerCase();
+    if (/filter|filtration|flow|biological media|maintenance/.test(text)) {
+      return { tab: "equipment", target: "filter_panel", section: "Filter" };
+    }
+    if (/heater|temperature sensor|heater plug/.test(text)) {
+      return { tab: "equipment", target: "backup_heater_row", section: "Heater" };
+    }
+    if (/lighting|light |co₂|co2/.test(text)) {
+      return { tab: "equipment", target: "lighting_panel", section: "Lighting & CO₂" };
+    }
+    if (/group|shoal|minimum group|add \d+ to reach/.test(text)) {
+      return { tab: "stocking", target: "group_suggestions", section: "Stocking" };
+    }
+    if (/ammonia|nh₃|nh3|nitrite|no₂|no2|nitrate|no₃|no3|current water|current ph|current gh|current kh|current temperature/.test(text)) {
+      return { tab: "water", target: "water_warning", section: "Water" };
+    }
+    if (/community|shared .*range|no shared|range conflict|tank dimension|tank requirement|tank size|tank volume/.test(text)) {
+      return { tab: "overview", target: "stocking_assessment_issues", section: "Overview" };
+    }
+    return {
+      tab: fallbackTab,
+      target: fallbackTab === "water" ? "water_warning" : fallbackTab === "equipment" ? "filter_panel" : fallbackTab === "stocking" ? "stock_panel" : "stocking_assessment_issues",
+      section: fallbackTab.charAt(0).toUpperCase() + fallbackTab.slice(1),
+    };
+  }
+
+  _collectAttentionItems() {
+    const items = [];
+    const seen = new Set();
+    const add = (severity, message, tab, target, section) => {
+      const text = String(message || "").trim();
+      if (!text) return;
+      const key = text.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      items.push({ severity, message: text, tab, target, section });
+    };
+
+    const water = this._state(this._sensorEntity("water_status"));
+    const waterState = String(water?.state || "unknown");
+    const waterReasons = Array.isArray(water?.attributes?.reasons) ? water.attributes.reasons : [];
+    if (["danger","attention","incomplete"].includes(waterState)) {
+      if (waterReasons.length) {
+        for (const reason of waterReasons) {
+          add(waterState === "danger" ? "danger" : "warning", reason, "water", "water_warning", "Water");
+        }
+      } else {
+        add(waterState === "danger" ? "danger" : "warning", "Water parameters need attention.", "water", "water_warning", "Water");
+      }
+    }
+
+    const stocking = this._state(this._sensorEntity("stocking"));
+    const assessment = stocking?.attributes?.stocking_assessment || {};
+    const assessmentIssues = Array.isArray(assessment.issues) ? assessment.issues : [];
+    for (const issue of assessmentIssues) {
+      const message = String(issue?.message || "");
+      const route = this._attentionTargetForMessage(message, "overview");
+      const severity = issue?.severity === "danger" ? "danger" : issue?.severity === "info" ? "info" : "warning";
+      add(severity, message, route.tab, route.target, route.section);
+    }
+
+    const assessmentStatus = String(assessment.status || "");
+    if (["attention","danger","incomplete"].includes(assessmentStatus) && !assessmentIssues.length) {
+      const message = assessment.label || "Stocking assessment needs attention.";
+      const route = this._attentionTargetForMessage(message, "overview");
+      add(assessmentStatus === "danger" ? "danger" : assessmentStatus === "incomplete" ? "info" : "warning", message, route.tab, route.target, route.section);
+    }
+
+    const heater = this._state(this._sensorEntity("heater_automation"));
+    if (heater && ["lockout","sensor_unavailable","switch_unavailable"].includes(String(heater.state))) {
+      const reason = heater.attributes?.reason || String(heater.state).replaceAll("_"," ");
+      add(heater.state === "lockout" ? "danger" : "warning", reason, "equipment", "backup_heater_row", "Heater");
+    }
+
+    const lighting = this._state(this._sensorEntity("lighting_automation"));
+    if (lighting && String(lighting.state) === "equipment_unavailable") {
+      add("warning", lighting.attributes?.reason || "Lighting equipment is unavailable.", "equipment", "lighting_panel", "Lighting & CO₂");
+    }
+
+    const rank = { danger: 0, warning: 1, attention: 1, info: 2 };
+    items.sort((a,b) => (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9));
+    return items;
+  }
+
+  _overallAttentionState(items) {
+    if (items.some(item => item.severity === "danger")) return "danger";
+    if (items.some(item => item.severity === "warning" || item.severity === "attention")) return "attention";
+    if (items.some(item => item.severity === "info")) return "incomplete";
+    return "good";
+  }
+
+  _renderAttentionStatus() {
+    const button = this.shadowRoot.getElementById("attention_status");
+    const popover = this.shadowRoot.getElementById("attention_popover");
+    if (!button || !popover) return;
+    const items = this._collectAttentionItems();
+    this._attentionItems = items;
+    const state = this._overallAttentionState(items);
+    const label = state === "good" ? "Good" : state === "danger" ? "Danger" : state === "incomplete" ? "Incomplete" : "Attention";
+    button.textContent = label;
+    button.className = `status attention-main ${state}`;
+    button.setAttribute("aria-label", items.length ? `${label}: ${items[0].message}` : "Aquarium status good");
+    button.title = items.map(item => `${item.section}: ${item.message}`).join("\n") || "No current attention items";
+
+    if (!items.length) {
+      popover.innerHTML = '<div class="attention-popover-title">Aquarium status</div><div class="attention-popover-empty">No current attention items.</div>';
+      return;
+    }
+
+    popover.innerHTML = '<div class="attention-popover-title">Needs attention</div>' + items.map((item,index) =>
+      '<button type="button" class="attention-item ' + this._escape(item.severity) + '" data-attention-index="' + index + '">' +
+      '<div class="attention-item-head"><span>' + this._escape(item.section) + '</span><span>→</span></div>' +
+      '<div class="attention-item-message">' + this._escape(item.message) + '</div></button>'
+    ).join("");
+    popover.querySelectorAll("[data-attention-index]").forEach(el => {
+      el.addEventListener("click", event => {
+        event.stopPropagation();
+        const item = items[Number(el.dataset.attentionIndex)];
+        if (item) this._navigateAttention(item);
+      });
+    });
+  }
+
+  _openPrimaryAttention() {
+    const items = Array.isArray(this._attentionItems) ? this._attentionItems : this._collectAttentionItems();
+    if (items.length) this._navigateAttention(items[0]);
+  }
+
+  _navigateAttention(item) {
+    if (!item) return;
+    this._setTab(item.tab || "overview");
+    window.requestAnimationFrame(() => {
+      const target = this.shadowRoot.getElementById(item.target || "");
+      const fallback = this.shadowRoot.getElementById(`tab_${item.tab || "overview"}`);
+      (target || fallback)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
 
   _renderFilter() {
     const state = this._state(this._sensorEntity("filter"));
