@@ -86,6 +86,16 @@ TANK_READINGS: tuple[AquariumNumberDescription, ...] = (
         native_unit_of_measurement="dKH",
         mode=NumberMode.BOX,
     ),
+    AquariumNumberDescription(
+        key="tds",
+        name="TDS",
+        icon="mdi:water-sync",
+        native_min_value=0,
+        native_max_value=2000,
+        native_step=1,
+        native_unit_of_measurement="ppm",
+        mode=NumberMode.BOX,
+    ),
 )
 
 SOURCE_READINGS: tuple[AquariumNumberDescription, ...] = (
@@ -130,6 +140,16 @@ SOURCE_READINGS: tuple[AquariumNumberDescription, ...] = (
         native_max_value=50,
         native_step=1,
         native_unit_of_measurement="dKH",
+        mode=NumberMode.BOX,
+    ),
+    AquariumNumberDescription(
+        key="source_tds",
+        name="Source water TDS",
+        icon="mdi:home-water",
+        native_min_value=0,
+        native_max_value=2000,
+        native_step=1,
+        native_unit_of_measurement="ppm",
         mode=NumberMode.BOX,
     ),
 )

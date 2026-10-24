@@ -25,6 +25,8 @@ from .const import (
     ATTR_ENTRY_ID,
     ATTR_GH,
     ATTR_KH,
+    ATTR_TDS,
+    ATTR_LIVESTOCK_TYPE,
     ATTR_TEST_TYPE,
     ATTR_NITRATE,
     ATTR_NITRITE,
@@ -87,6 +89,10 @@ from .const import (
     SIGNAL_STOCKING_UPDATED,
     STOCK_STORAGE_KEY_PREFIX,
     STOCK_STORAGE_VERSION,
+    LIVESTOCK_TYPE_FISH,
+    LIVESTOCK_TYPE_SHRIMP,
+    LIVESTOCK_TYPE_SNAIL,
+    LIVESTOCK_TYPE_OTHER,
 )
 from .species import SpeciesLibraryManager
 from .species_importer import ImporterError, lookup_species_for_ha
@@ -145,7 +151,15 @@ class AquariumRuntimeData:
             for item in stocking:
                 if not isinstance(item, dict):
                     continue
-                enriched, item_changed = self.library.enrich_stock_item(item)
+                if str(item.get("livestock_type") or LIVESTOCK_TYPE_FISH) == LIVESTOCK_TYPE_FISH:
+                    enriched, item_changed = self.library.enrich_stock_item(item)
+                else:
+                    enriched = dict(item)
+                    enriched.setdefault("profile_id", None)
+                    enriched.setdefault("profile_overrides", [])
+                    enriched.setdefault("tds_min", None)
+                    enriched.setdefault("tds_max", None)
+                    item_changed = enriched != item
                 migrated.append(enriched)
                 changed = changed or item_changed
             self.stocking = migrated
@@ -182,7 +196,10 @@ class AquariumRuntimeData:
             if success:
                 refreshed: list[dict[str, Any]] = []
                 for item in self.stocking:
-                    enriched, item_changed = self.library.enrich_stock_item(item)
+                    if str(item.get("livestock_type") or LIVESTOCK_TYPE_FISH) == LIVESTOCK_TYPE_FISH:
+                        enriched, item_changed = self.library.enrich_stock_item(item)
+                    else:
+                        enriched, item_changed = dict(item), False
                     refreshed.append(enriched)
                     changed = changed or item_changed
                 self.stocking = refreshed
@@ -263,6 +280,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Required(ATTR_NAME): vol.All(cv.string, vol.Length(min=1, max=100)),
             vol.Required(ATTR_QUANTITY): vol.All(vol.Coerce(int), vol.Range(min=1, max=999)),
             vol.Optional("scientific_name", default=""): vol.All(cv.string, vol.Length(max=120)),
+            vol.Optional(ATTR_LIVESTOCK_TYPE, default=LIVESTOCK_TYPE_FISH): vol.In((LIVESTOCK_TYPE_FISH, LIVESTOCK_TYPE_SHRIMP, LIVESTOCK_TYPE_SNAIL, LIVESTOCK_TYPE_OTHER)),
             vol.Optional("notes", default=""): vol.All(cv.string, vol.Length(max=500)),
         }
     )
@@ -273,6 +291,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vol.Optional(ATTR_NAME): vol.All(cv.string, vol.Length(min=1, max=100)),
         vol.Optional(ATTR_QUANTITY): vol.All(vol.Coerce(int), vol.Range(min=1, max=999)),
         vol.Optional("scientific_name"): vol.Any(None, vol.All(cv.string, vol.Length(max=120))),
+        vol.Optional(ATTR_LIVESTOCK_TYPE): vol.In((LIVESTOCK_TYPE_FISH, LIVESTOCK_TYPE_SHRIMP, LIVESTOCK_TYPE_SNAIL, LIVESTOCK_TYPE_OTHER)),
         vol.Optional("notes"): vol.Any(None, vol.All(cv.string, vol.Length(max=500))),
         vol.Optional("adult_size_cm"): _optional_number_schema(),
         vol.Optional("temperature_min"): _optional_number_schema(),
@@ -283,6 +302,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vol.Optional("gh_max"): _optional_number_schema(),
         vol.Optional("kh_min"): _optional_number_schema(),
         vol.Optional("kh_max"): _optional_number_schema(),
+        vol.Optional("tds_min"): _optional_number_schema(),
+        vol.Optional("tds_max"): _optional_number_schema(),
         vol.Optional("min_group_size"): _optional_int_schema(),
         vol.Optional("min_tank_length_cm"): _optional_number_schema(),
         vol.Optional("min_tank_width_cm"): _optional_number_schema(),
@@ -344,6 +365,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Required(ATTR_PH): vol.All(vol.Coerce(float), vol.Range(min=4, max=10)),
             vol.Required(ATTR_GH): vol.All(vol.Coerce(float), vol.Range(min=0, max=50)),
             vol.Required(ATTR_KH): vol.All(vol.Coerce(float), vol.Range(min=0, max=50)),
+            vol.Optional(ATTR_TDS): vol.All(vol.Coerce(float), vol.Range(min=0, max=2000)),
         }
     )
 
@@ -379,10 +401,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "name": name,
             "quantity": int(call.data[ATTR_QUANTITY]),
             "scientific_name": call.data.get("scientific_name", "").strip(),
+            "livestock_type": call.data.get(ATTR_LIVESTOCK_TYPE, LIVESTOCK_TYPE_FISH),
             "notes": call.data.get("notes", "").strip(),
             "profile_overrides": [],
         }
-        item, _ = runtime.library.enrich_stock_item(item)
+        if item["livestock_type"] == LIVESTOCK_TYPE_FISH:
+            item, _ = runtime.library.enrich_stock_item(item)
+        else:
+            item.update({
+                "profile_id": None,
+                "adult_size_cm": None,
+                "temperature_min": None,
+                "temperature_max": None,
+                "ph_min": None,
+                "ph_max": None,
+                "gh_min": None,
+                "gh_max": None,
+                "kh_min": None,
+                "kh_max": None,
+                "tds_min": None,
+                "tds_max": None,
+                "min_group_size": None,
+                "min_tank_length_cm": None,
+                "min_tank_width_cm": None,
+                "min_tank_height_cm": None,
+                "min_tank_volume_l": None,
+                "social_type": "",
+                "temperament": "",
+                "swimming_zone": "",
+                "cautions": [],
+                "source_label": "",
+                "source_url": "",
+            })
         runtime.stocking.append(item)
         await runtime.async_save_stocking()
 
@@ -416,7 +466,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     overrides.add(key)
 
             new_name = str(updated.get("name", ""))
-            if new_name and new_name.casefold() != old_name.casefold():
+            livestock_type = str(updated.get("livestock_type") or LIVESTOCK_TYPE_FISH)
+            if livestock_type != LIVESTOCK_TYPE_FISH:
+                updated["profile_id"] = None
+                updated["source_label"] = ""
+                updated["source_url"] = ""
+                updated["cautions"] = []
+                updated["profile_overrides"] = sorted(overrides)
+            elif new_name and new_name.casefold() != old_name.casefold():
                 profile = runtime.library.match(new_name)
                 if profile is not None:
                     # Selecting a different known species starts from that library
@@ -425,6 +482,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         "id": updated.get("id", stock_id),
                         "name": new_name,
                         "quantity": updated.get("quantity", 1),
+                        "livestock_type": updated.get("livestock_type", LIVESTOCK_TYPE_FISH),
                         "notes": updated.get("notes", ""),
                         "profile_overrides": [],
                     }
@@ -540,6 +598,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for key in keys:
             entity = runtime.reading_entities[key]
             await entity.async_set_native_value(float(call.data[key]))
+
+        if ATTR_TDS in call.data and ATTR_TDS in runtime.reading_entities:
+            await runtime.reading_entities[ATTR_TDS].async_set_native_value(float(call.data[ATTR_TDS]))
 
         runtime.last_reading_submitted = datetime.now(UTC).isoformat()
         await runtime.async_save_stocking(notify=False)

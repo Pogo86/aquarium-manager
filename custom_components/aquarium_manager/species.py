@@ -517,6 +517,8 @@ class SpeciesLibraryManager:
                 "gh_max": None,
                 "kh_min": None,
                 "kh_max": None,
+                "tds_min": None,
+                "tds_max": None,
                 "min_group_size": None,
                 "min_tank_length_cm": None,
                 "min_tank_width_cm": None,

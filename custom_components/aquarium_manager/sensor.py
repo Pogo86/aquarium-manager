@@ -20,6 +20,7 @@ from .filtering import filter_summary
 from .const import (
     CONF_LENGTH_CM,
     CONF_TANK_NAME,
+    CONF_TANK_PROFILE,
     CONF_TEMPERATURE_ENTITY,
     CONF_WATER_DEPTH_CM,
     CONF_WATER_TYPE,
@@ -32,6 +33,8 @@ from .const import (
     SIGNAL_LIGHTING_UPDATED,
     SIGNAL_FILTER_UPDATED,
     SIGNAL_STOCKING_UPDATED,
+    TANK_PROFILE_SHRIMP,
+    LIVESTOCK_TYPE_FISH,
 )
 
 
@@ -208,6 +211,8 @@ def _group_recommendations(
     tank_volume = _tank_volume_l(entry)
 
     for item in stocking:
+        if str(item.get("livestock_type") or LIVESTOCK_TYPE_FISH) != LIVESTOCK_TYPE_FISH:
+            continue
         minimum = item.get("min_group_size")
         if minimum is None:
             continue
@@ -275,6 +280,8 @@ def _relative_bioload_summary(
     unknown_groups: list[str] = []
 
     for item in stocking:
+        if str(item.get("livestock_type") or LIVESTOCK_TYPE_FISH) != LIVESTOCK_TYPE_FISH:
+            continue
         try:
             quantity = max(0, int(item.get("quantity") or 0))
         except (TypeError, ValueError):
@@ -312,6 +319,12 @@ def _relative_bioload_summary(
         if item.get("safe_to_add")
     )
 
+    non_fish_individuals = sum(
+        max(0, int(item.get("quantity") or 0))
+        for item in stocking
+        if str(item.get("livestock_type") or LIVESTOCK_TYPE_FISH) != LIVESTOCK_TYPE_FISH
+    )
+
     return {
         "points": round(total_points, 1),
         "points_per_litre": round(density, 2) if density is not None else None,
@@ -319,6 +332,7 @@ def _relative_bioload_summary(
         "known_individuals": known_individuals,
         "unknown_individuals": unknown_individuals,
         "unknown_groups": unknown_groups,
+        "non_fish_individuals_excluded": non_fish_individuals,
         "projected_points_after_safe_group_fixes": round(total_points + safe_added_points, 1),
         "method": "Relative index: quantity × adult length³ ÷ 100",
     }
@@ -366,12 +380,14 @@ def _stocking_assessment(
         "ph": entry.runtime_data.readings.get("ph"),
         "gh": entry.runtime_data.readings.get("gh"),
         "kh": entry.runtime_data.readings.get("kh"),
+        "tds": entry.runtime_data.readings.get("tds"),
     }
     labels = {
         "temperature": ("temperature", "°C"),
         "ph": ("pH", ""),
         "gh": ("GH", " dGH"),
         "kh": ("KH", " dKH"),
+        "tds": ("TDS", " ppm"),
     }
     water_issues: list[str] = []
     for key, current in current_values.items():
@@ -550,6 +566,7 @@ def _community_ranges_for_stock(
         "ph": _range_for(stocking, "ph_min", "ph_max", ""),
         "gh": _range_for(stocking, "gh_min", "gh_max", "dGH"),
         "kh": _range_for(stocking, "kh_min", "kh_max", "dKH"),
+        "tds": _range_for(stocking, "tds_min", "tds_max", "ppm"),
     }
 
 
@@ -691,11 +708,12 @@ def _stock_warnings(
 ) -> list[dict[str, Any]]:
     """Return warnings specific to one stock record."""
     warnings: list[dict[str, str]] = []
-    name = str(item.get("name") or "Fish")
+    livestock_type = str(item.get("livestock_type") or LIVESTOCK_TYPE_FISH)
+    name = str(item.get("name") or ("Fish" if livestock_type == LIVESTOCK_TYPE_FISH else "Livestock"))
     quantity = int(item.get("quantity") or 0)
     minimum_group = item.get("min_group_size")
 
-    if minimum_group is not None and quantity < int(minimum_group):
+    if livestock_type == LIVESTOCK_TYPE_FISH and minimum_group is not None and quantity < int(minimum_group):
         social = str(item.get("social_type") or "group")
         add_count = int(minimum_group) - quantity
         warnings.append(
@@ -745,7 +763,7 @@ def _stock_warnings(
             item.get(key) is not None
             for key in (
                 "temperature_min", "temperature_max", "ph_min", "ph_max",
-                "gh_min", "gh_max", "kh_min", "kh_max"
+                "gh_min", "gh_max", "kh_min", "kh_max", "tds_min", "tds_max"
             )
         )
         warnings.append(
@@ -1039,6 +1057,7 @@ class AquariumCommunitySensor(AquariumBaseSensor):
                     ("ph_min", "ph_max"),
                     ("gh_min", "gh_max"),
                     ("kh_min", "kh_max"),
+                    ("tds_min", "tds_max"),
                 )
             )
             for item in stocking
@@ -1094,6 +1113,8 @@ class AquariumCompatibilitySensor(AquariumBaseSensor):
     def _build(self) -> tuple[list[dict[str, Any]], int, dict[str, dict[str, Any]]]:
         runtime = self._entry.runtime_data
         library = runtime.library
+        if self._entry.data.get(CONF_TANK_PROFILE) == TANK_PROFILE_SHRIMP:
+            return [], 0, _community_ranges_for_stock(runtime.stocking)
         if library is None:
             return [], 0, _community_ranges_for_stock(runtime.stocking)
 
@@ -1200,6 +1221,7 @@ class AquariumCompatibilitySensor(AquariumBaseSensor):
                     or 0
                 )
                 for item in stocking
+                if str(item.get("livestock_type") or LIVESTOCK_TYPE_FISH) == LIVESTOCK_TYPE_FISH
             ),
             1,
         )

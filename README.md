@@ -104,3 +104,51 @@ Backup heater control is now a two-option **Auto / Off** mode selector. **Off** 
 - Clicking the main status chip jumps to the highest-priority attention item.
 - Mobile keeps simple tap-to-navigate behavior without relying on hover.
 
+## v0.9.7 multi-aquarium dashboard
+
+Aquarium Manager supports multiple Home Assistant config entries, one per aquarium. Each tank keeps its own water readings, livestock, equipment, filter media and maintenance data.
+
+The dashboard card can now switch between multiple aquariums:
+
+```yaml
+type: custom:aquarium-manager-card
+tanks:
+  - tank_name: Main Aquarium
+    entity_prefix: main_aquarium
+    water_type: Freshwater
+  - tank_name: Reef Aquarium
+    entity_prefix: reef_aquarium
+    water_type: Marine
+```
+
+Existing single-tank card configuration remains supported.
+
+## v0.9.8 shrimp and multi-aquarium support
+
+Aquarium Manager now supports mixed multi-tank setups including dedicated freshwater shrimp aquariums.
+
+- Add each physical aquarium as its own Aquarium Manager config entry.
+- Choose **Shrimp aquarium** during setup for a dedicated shrimp tank.
+- Livestock records can be Fish, Shrimp, Snail or Other.
+- Shrimp and other invertebrates are excluded from fish-only shoaling and relative fish-bioload calculations.
+- Shrimp/invertebrate records can store temperature, pH, GH, KH and TDS ranges.
+- TDS and source-water TDS entities are available; the shrimp dashboard adds TDS to the water-test view.
+- Fish-only compatible-fish and species-library navigation is hidden when a card tank is marked with `tank_profile: shrimp`.
+
+Example dashboard:
+
+```yaml
+type: custom:aquarium-manager-card
+tanks:
+  - tank_name: Main Aquarium
+    entity_prefix: main_aquarium
+    water_type: Freshwater
+    tank_profile: community
+  - tank_name: Shrimp Tank
+    entity_prefix: shrimp_tank
+    water_type: Freshwater
+    tank_profile: shrimp
+```
+
+Existing single-tank and fish records remain compatible; missing livestock types are treated as Fish.
+

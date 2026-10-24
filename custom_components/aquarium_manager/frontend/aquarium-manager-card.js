@@ -11,6 +11,8 @@ class AquariumManagerCard extends HTMLElement {
     this._speciesSearchResult = null;
     this._waterTestTimers = {};
     this._waterTimerTicker = null;
+    this._tankConfigs = [];
+    this._activeTankIndex = 0;
   }
 
   static getStubConfig() {
@@ -19,9 +21,26 @@ class AquariumManagerCard extends HTMLElement {
 
   setConfig(config) {
     if (!config) throw new Error("Aquarium Manager card configuration is required");
-    const tankName = config.tank_name || "Main Aquarium";
-    const prefix = config.entity_prefix || tankName.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
-    this._config = { tank_name: tankName, entity_prefix: prefix, entities: config.entities || {} };
+    const normalizeTank = (tank, fallbackName) => {
+      const tankName = tank?.tank_name || tank?.name || fallbackName || "Main Aquarium";
+      const prefix = tank?.entity_prefix || tankName.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+      return {
+        tank_name: tankName,
+        entity_prefix: prefix,
+        entities: tank?.entities || {},
+        water_type: tank?.water_type || "",
+        tank_profile: tank?.tank_profile || "community",
+      };
+    };
+
+    if (Array.isArray(config.tanks) && config.tanks.length) {
+      this._tankConfigs = config.tanks.map((tank, index) => normalizeTank(tank, `Aquarium ${index + 1}`));
+    } else {
+      this._tankConfigs = [normalizeTank(config, "Main Aquarium")];
+    }
+
+    if (this._activeTankIndex >= this._tankConfigs.length) this._activeTankIndex = 0;
+    this._config = { ...this._tankConfigs[this._activeTankIndex] };
     this._built = false;
     if (this._hass) {
       this._build();
@@ -44,6 +63,8 @@ class AquariumManagerCard extends HTMLElement {
   }
 
   getCardSize() { return 11; }
+
+  _isShrimpTank() { return this._config?.tank_profile === "shrimp"; }
 
   _entity(key, domain, suffix) {
     return this._config.entities?.[key] || `${domain}.${this._config.entity_prefix}_${suffix}`;
@@ -90,9 +111,9 @@ class AquariumManagerCard extends HTMLElement {
   _numberEntity(key) {
     const map = {
       ammonia: ["number", "ammonia"], nitrite: ["number", "nitrite"], nitrate: ["number", "nitrate"],
-      ph: ["number", "ph"], gh: ["number", "gh"], kh: ["number", "kh"],
+      ph: ["number", "ph"], gh: ["number", "gh"], kh: ["number", "kh"], tds: ["number", "tds"],
       source_nitrate: ["number", "source_water_nitrate"], source_ph: ["number", "source_water_ph"],
-      source_gh: ["number", "source_water_gh"], source_kh: ["number", "source_water_kh"],
+      source_gh: ["number", "source_water_gh"], source_kh: ["number", "source_water_kh"], source_tds: ["number", "source_water_tds"],
     };
     const [domain, suffix] = map[key];
     return this._entity(key, domain, suffix);
@@ -115,6 +136,7 @@ class AquariumManagerCard extends HTMLElement {
         .hero-top,.title-wrap,.section-title,.stock-meta,.modal-actions{display:flex;align-items:center}.hero-top{justify-content:space-between;gap:14px}.title-wrap{gap:12px}
         .tank-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:13px;background:color-mix(in srgb,var(--primary-color) 15%,transparent)}
         .tank-icon ha-icon{color:var(--primary-color);--mdc-icon-size:27px} h1{font-size:21px;margin:0 0 3px}.subline{font-size:12px;color:var(--secondary-text-color)}
+        .tank-title-block{min-width:0}.tank-switcher{margin-top:6px;display:flex;align-items:center;gap:7px}.tank-switcher select{width:auto;max-width:220px;padding:5px 28px 5px 8px;font-size:11px;border-radius:8px;background:var(--secondary-background-color)}.tank-switcher-label{font-size:10px;color:var(--secondary-text-color);text-transform:uppercase}
         .status{font-size:11px;font-weight:700;text-transform:uppercase;padding:6px 9px;border-radius:999px;background:var(--secondary-background-color)}
         .status.clear,.status.good{color:var(--success-color,#43a047);background:color-mix(in srgb,var(--success-color,#43a047) 16%,transparent)}
         .status.attention,.status.incomplete{color:var(--warning-color,#f9a825);background:color-mix(in srgb,var(--warning-color,#f9a825) 16%,transparent)}
@@ -203,13 +225,13 @@ class AquariumManagerCard extends HTMLElement {
           .filter-metrics,.filter-stages,.filter-editor-grid{grid-template-columns:1fr}.filter-actions{display:grid;grid-template-columns:1fr}.filter-actions button{width:100%;min-height:44px}
           .attention-popover{display:none}.attention-main{min-height:36px}
         }
-        @media(max-width:360px){.summary,.community-grid,.assessment-grid,.schedule-grid{grid-template-columns:1fr}.hero-top{align-items:flex-start}.tank-icon{width:40px;height:40px}.tabs{padding-left:8px;padding-right:8px}.content{padding-left:10px;padding-right:10px}}
+        @media(max-width:360px){.summary,.community-grid,.assessment-grid,.schedule-grid{grid-template-columns:1fr}.hero-top{align-items:flex-start}.tank-icon{width:40px;height:40px}.tank-switcher select{max-width:160px}.tabs{padding-left:8px;padding-right:8px}.content{padding-left:10px;padding-right:10px}}
       </style>
 
       <ha-card>
         <div class="hero">
           <div class="hero-top">
-            <div class="title-wrap"><div class="tank-icon"><ha-icon icon="mdi:fishbowl-outline"></ha-icon></div><div><h1>${this._escape(this._config.tank_name)}</h1><div class="subline">Aquarium Manager</div></div></div>
+            <div class="title-wrap"><div class="tank-icon"><ha-icon icon="mdi:fishbowl-outline"></ha-icon></div><div class="tank-title-block"><h1>${this._escape(this._config.tank_name)}</h1><div class="subline">Aquarium Manager${this._config.water_type ? " · " + this._escape(this._config.water_type) : ""}</div>${this._tankConfigs.length > 1 ? '<div class="tank-switcher"><span class="tank-switcher-label">Tank</span><select id="tank_selector" aria-label="Select aquarium">' + this._tankConfigs.map((tank,index) => '<option value="' + index + '"' + (index === this._activeTankIndex ? ' selected' : '') + '>' + this._escape(tank.tank_name) + '</option>').join("") + '</select></div>' : ""}</div></div>
             <div class="attention-wrap">
               <button id="attention_status" class="status attention-main" type="button" aria-label="Aquarium status">—</button>
               <div id="attention_popover" class="attention-popover" role="tooltip"></div>
@@ -228,8 +250,7 @@ class AquariumManagerCard extends HTMLElement {
           <button id="tab_btn_water" class="tab-btn" role="tab" aria-selected="false">Water</button>
           <button id="tab_btn_stocking" class="tab-btn" role="tab" aria-selected="false">Stocking</button>
           <button id="tab_btn_equipment" class="tab-btn" role="tab" aria-selected="false">Equipment</button>
-          <button id="tab_btn_compat" class="tab-btn" role="tab" aria-selected="false">Compatible fish</button>
-          <button id="tab_btn_library" class="tab-btn" role="tab" aria-selected="false">Species Library</button>
+          ${this._isShrimpTank() ? "" : `<button id="tab_btn_compat" class="tab-btn" role="tab" aria-selected="false">Compatible fish</button><button id="tab_btn_library" class="tab-btn" role="tab" aria-selected="false">Species Library</button>`}
         </div>
 
         <div class="content">
@@ -252,14 +273,14 @@ class AquariumManagerCard extends HTMLElement {
             <section class="section">
               <div class="section-title-row"><div class="section-title"><ha-icon icon="mdi:test-tube"></ha-icon>Current aquarium water</div><button id="open_water_readings" class="water-update-btn">Update readings</button></div>
               <div class="parameter-grid">
-                ${this._waterValueBox("ammonia","NH₃ / NH₄","mg/L")}${this._waterValueBox("nitrite","NO₂","mg/L")}${this._waterValueBox("nitrate","NO₃","mg/L")}${this._waterValueBox("ph","pH","")}${this._waterValueBox("gh","GH","dGH")}${this._waterValueBox("kh","KH","dKH")}
+                ${this._waterValueBox("ammonia","NH₃ / NH₄","mg/L")}${this._waterValueBox("nitrite","NO₂","mg/L")}${this._waterValueBox("nitrate","NO₃","mg/L")}${this._waterValueBox("ph","pH","")}${this._waterValueBox("gh","GH","dGH")}${this._waterValueBox("kh","KH","dKH")}${this._isShrimpTank() ? this._waterValueBox("tds","TDS","ppm") : ""}
               </div>
               <div id="last_water_test" class="water-last-test">No submitted test recorded</div>
               <div id="water_warning" class="water-warning"></div>
             </section>
 
             <section class="section"><div class="section-title"><ha-icon icon="mdi:home-water"></ha-icon>Source water</div><div class="source-grid">
-              ${this._numberBox("source_nitrate","NO₃","mg/L","0.5")}${this._numberBox("source_ph","pH","","0.1")}${this._numberBox("source_gh","GH","dGH","1")}${this._numberBox("source_kh","KH","dKH","1")}
+              ${this._numberBox("source_nitrate","NO₃","mg/L","0.5")}${this._numberBox("source_ph","pH","","0.1")}${this._numberBox("source_gh","GH","dGH","1")}${this._numberBox("source_kh","KH","dKH","1")}${this._isShrimpTank() ? this._numberBox("source_tds","TDS","ppm","1") : ""}
             </div></section>
 
             <section class="section"><div class="section-title"><ha-icon icon="mdi:compare-horizontal"></ha-icon>Change from source water</div><div class="delta-grid">
@@ -349,8 +370,9 @@ class AquariumManagerCard extends HTMLElement {
       input.addEventListener("keydown", e => { if (e.key === "Enter") e.currentTarget.blur(); });
     });
     this.shadowRoot.getElementById("add_fish").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); this._openEdit(null); });
-    this.shadowRoot.getElementById("refresh_library").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); this._refreshLibrary(); });
+    this.shadowRoot.getElementById("refresh_library")?.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); this._refreshLibrary(); });
     this.shadowRoot.getElementById("attention_status").addEventListener("click", () => this._openPrimaryAttention());
+    this.shadowRoot.getElementById("tank_selector")?.addEventListener("change", event => this._selectTank(Number(event.currentTarget.value)));
     this.shadowRoot.getElementById("backup_heater_mode_auto").addEventListener("click", () => this._setBackupHeaterMode("Auto"));
     this.shadowRoot.getElementById("backup_heater_mode_off").addEventListener("click", () => this._setBackupHeaterMode("Off"));
     this.shadowRoot.getElementById("edit_filter").addEventListener("click", () => this._openFilterEditor());
@@ -365,8 +387,8 @@ class AquariumManagerCard extends HTMLElement {
     for (const tab of ["overview","water","stocking","equipment","compat","library"]) {
       this.shadowRoot.getElementById(`tab_btn_${tab}`)?.addEventListener("click", () => this._setTab(tab));
     }
-    this.shadowRoot.getElementById("species_search_btn").addEventListener("click", () => this._searchSpecies());
-    this.shadowRoot.getElementById("species_search_query").addEventListener("keydown", e => { if (e.key === "Enter") this._searchSpecies(); });
+    this.shadowRoot.getElementById("species_search_btn")?.addEventListener("click", () => this._searchSpecies());
+    this.shadowRoot.getElementById("species_search_query")?.addEventListener("keydown", e => { if (e.key === "Enter") this._searchSpecies(); });
     this.shadowRoot.getElementById("modal_backdrop").addEventListener("click", e => { if (e.target.id === "modal_backdrop") this._closeModal(); });
     this._built = true;
   }
@@ -383,7 +405,7 @@ class AquariumManagerCard extends HTMLElement {
     this._setText("kh_delta", this._signedDisplay(this._sensorEntity("kh_delta")));
     this._setText("nitrate_delta", this._signedDisplay(this._sensorEntity("nitrate_delta")));
 
-    for (const key of ["ammonia","nitrite","nitrate","ph","gh","kh"]) {
+    for (const key of this._isShrimpTank() ? ["ammonia","nitrite","nitrate","ph","gh","kh","tds"] : ["ammonia","nitrite","nitrate","ph","gh","kh"]) {
       this._setText(`water_value_${key}`, this._display(this._numberEntity(key)));
     }
 
@@ -407,9 +429,9 @@ class AquariumManagerCard extends HTMLElement {
 
     this._renderStockingAssessment();
     this._renderCommunity();
-    this._renderLibrary();
+    if (!this._isShrimpTank()) this._renderLibrary();
     this._renderStocking();
-    this._renderCompatibility();
+    if (!this._isShrimpTank()) this._renderCompatibility();
     this._renderAttentionStatus();
     this._setTab(this._activeTab);
   }
@@ -976,7 +998,7 @@ class AquariumManagerCard extends HTMLElement {
     this._showModal(`
       <div class="modal-head"><div><div class="modal-title">Update water readings</div><div class="modal-subtitle">One complete aquarium water-test snapshot</div></div><button class="icon-btn" data-close><ha-icon icon="mdi:close"></ha-icon></button></div>
       <div class="modal-body">
-        <div class="water-test-note">Enter all six results, then submit them together. The reagent timers run in Home Assistant, so they keep running even if you close this popup or leave the dashboard.</div>
+        <div class="water-test-note">Enter the current water-test results, then submit them together. The reagent timers run in Home Assistant, so they keep running even if you close this popup or leave the dashboard.</div>
         <div class="water-test-grid">
           ${this._waterReadingField("ammonia","NH₃ / NH₄","mg/L","0.01","ammonia","Start 10 min")}
           ${this._waterReadingField("nitrite","NO₂","mg/L","0.01","nitrite","Start 2 min")}
@@ -984,6 +1006,7 @@ class AquariumManagerCard extends HTMLElement {
           ${this._waterReadingField("ph","pH","","0.1")}
           ${this._waterReadingField("gh","GH","dGH","1")}
           ${this._waterReadingField("kh","KH","dKH","1")}
+          ${this._isShrimpTank() ? this._waterReadingField("tds","TDS","ppm","1") : ""}
         </div>
         <div id="water_test_message" class="water-test-message" style="margin-top:12px"></div>
         <div class="modal-actions"><button data-close>Cancel</button><button id="water_submit_readings" class="primary">Submit readings</button></div>
@@ -1057,7 +1080,7 @@ class AquariumManagerCard extends HTMLElement {
       values[input.dataset.readingKey] = value;
     });
     if (invalid) {
-      if (message) message.textContent = "Enter all six readings before submitting";
+      if (message) message.textContent = "Enter all displayed readings before submitting";
       return;
     }
     button.disabled = true;
@@ -1076,6 +1099,19 @@ class AquariumManagerCard extends HTMLElement {
     } finally {
       button.disabled = false;
     }
+  }
+
+  _selectTank(index) {
+    if (!Number.isInteger(index) || index < 0 || index >= this._tankConfigs.length || index === this._activeTankIndex) return;
+    this._activeTankIndex = index;
+    this._config = { ...this._tankConfigs[index] };
+    this._activeTab = "overview";
+    this._speciesSearchResult = null;
+    this._waterTestTimers = {};
+    this._attentionItems = [];
+    this._built = false;
+    this._build();
+    this._update();
   }
 
   _setTab(tab) {
@@ -1453,9 +1489,9 @@ class AquariumManagerCard extends HTMLElement {
     const total = Number(state.state) || 0;
     const bioload = state.attributes?.relative_bioload_points_total ?? state.attributes?.estimated_bioload_points_total;
     const density = state.attributes?.relative_bioload_points_per_l;
-    this._setText("livestock_total", `${total} fish`);
-    const loadText = bioload !== null && bioload !== undefined ? ` · ${this._fmt(bioload)} relative pts${density !== null && density !== undefined ? ` · ${this._fmt(density)} pts/L` : ""}` : "";
-    this._setText("stock_summary", `${total} fish · ${stock.length} ${stock.length === 1 ? "group" : "groups"}${loadText}`);
+    this._setText("livestock_total", `${total} livestock`);
+    const loadText = !this._isShrimpTank() && bioload !== null && bioload !== undefined ? ` · ${this._fmt(bioload)} relative pts${density !== null && density !== undefined ? ` · ${this._fmt(density)} pts/L` : ""}` : "";
+    this._setText("stock_summary", `${total} livestock · ${stock.length} ${stock.length === 1 ? "group" : "groups"}${loadText}`);
     if (!stock.length) { list.innerHTML = `<div class="empty">No livestock recorded yet.</div>`; return; }
     list.innerHTML = stock.map(item => {
       const warnings = (item.warnings || []).filter(w => w.severity !== "info");
@@ -1501,11 +1537,11 @@ class AquariumManagerCard extends HTMLElement {
       <div class="modal-head"><div><div class="modal-title">${this._escape(item.name)}</div><div class="modal-subtitle">${this._escape(item.scientific_name || "No scientific name")}</div></div><button class="icon-btn" data-close><ha-icon icon="mdi:close"></ha-icon></button></div>
       <div class="modal-body">
         <div class="detail-grid">
-          ${this._detail("Quantity", item.quantity)}${this._detail("Adult size", this._unit(item.adult_size_cm,"cm"))}
+          ${this._detail("Quantity", item.quantity)}${this._detail("Type", item.livestock_type || "fish")}${this._detail("Adult size", this._unit(item.adult_size_cm,"cm"))}
           ${this._detail("Relative bioload", item.bioload_points_group === null || item.bioload_points_group === undefined ? "Unknown" : `${this._fmt(item.bioload_points_group)} pts group`)}
           ${this._detail("Relative load / fish", item.bioload_points_each === null || item.bioload_points_each === undefined ? "Unknown" : `${this._fmt(item.bioload_points_each)} pts`)}
           ${this._detail("Temperature", this._range(item.temperature_min,item.temperature_max,"°C"))}${this._detail("pH", this._range(item.ph_min,item.ph_max,""))}
-          ${this._detail("GH", this._range(item.gh_min,item.gh_max,"dGH"))}${this._detail("KH", this._range(item.kh_min,item.kh_max,"dKH"))}
+          ${this._detail("GH", this._range(item.gh_min,item.gh_max,"dGH"))}${this._detail("KH", this._range(item.kh_min,item.kh_max,"dKH"))}${(item.livestock_type || "fish") !== "fish" ? this._detail("TDS", this._range(item.tds_min,item.tds_max,"ppm")) : ""}
           ${this._detail("Minimum group", item.min_group_size ?? "Not set")}${this._detail("Social", item.social_type || "Not set")}
           ${this._detail("Min tank", this._tankRange(item))}${this._detail("Swimming zone", item.swimming_zone || "Not set")}
           ${this._detail("Temperament", item.temperament || "Not set")}
@@ -1526,7 +1562,7 @@ class AquariumManagerCard extends HTMLElement {
     const item = id ? stock.find(x => x.id === id) : null;
     this._modalItemId = id; this._modalMode = "edit";
     const v = (key) => item?.[key] ?? "";
-    const libraryOptions = library.map(x => `<option value="${this._escape(x.name)}">${this._escape(x.scientific_name || "")}</option>`).join("");
+    const libraryOptions = this._isShrimpTank() ? "" : library.map(x => `<option value="${this._escape(x.name)}">${this._escape(x.scientific_name || "")}</option>`).join("");
     const advanced = item ? `
       <div class="form-field"><label>Scientific name</label><input data-field="scientific_name" value="${this._escape(v("scientific_name"))}"></div>
       <div class="form-field"><label>Adult size (cm)</label><input data-field="adult_size_cm" type="number" step="0.1" value="${this._escape(v("adult_size_cm"))}"></div>
@@ -1534,6 +1570,7 @@ class AquariumManagerCard extends HTMLElement {
       ${this._rangeInputs("pH","ph_min","ph_max",v)}
       ${this._rangeInputs("GH dGH","gh_min","gh_max",v)}
       ${this._rangeInputs("KH dKH","kh_min","kh_max",v)}
+      ${(item?.livestock_type || (this._isShrimpTank() ? "shrimp" : "fish")) !== "fish" ? this._rangeInputs("TDS ppm","tds_min","tds_max",v) : ""}
       <div class="form-field"><label>Minimum group size</label><input data-field="min_group_size" type="number" step="1" min="1" value="${this._escape(v("min_group_size"))}"></div>
       <div class="form-field"><label>Social type</label><input data-field="social_type" value="${this._escape(v("social_type"))}"></div>
       <div class="form-field"><label>Minimum tank length (cm)</label><input data-field="min_tank_length_cm" type="number" step="1" value="${this._escape(v("min_tank_length_cm"))}"></div>
@@ -1543,13 +1580,14 @@ class AquariumManagerCard extends HTMLElement {
       <div class="form-field full"><label>Temperament</label><input data-field="temperament" value="${this._escape(v("temperament"))}"></div>` : `<div class="form-field full"><div class="small-help">Known species are automatically filled from the active fish library after you add them. You can then edit individual values if required.</div></div>`;
 
     this._showModal(`
-      <div class="modal-head"><div><div class="modal-title">${item ? "Edit fish" : "Add fish"}</div><div class="modal-subtitle">${item ? this._escape(item.name) : "Add a stocking group"}</div></div><button class="icon-btn" data-close><ha-icon icon="mdi:close"></ha-icon></button></div>
+      <div class="modal-head"><div><div class="modal-title">${item ? "Edit livestock" : "Add livestock"}</div><div class="modal-subtitle">${item ? this._escape(item.name) : "Add a stocking group"}</div></div><button class="icon-btn" data-close><ha-icon icon="mdi:close"></ha-icon></button></div>
       <div class="modal-body"><datalist id="species_library">${libraryOptions}</datalist><div class="form-grid">
-        <div class="form-field"><label>Species / name</label><input data-field="name" list="species_library" value="${this._escape(v("name"))}"></div>
+        <div class="form-field"><label>Species / name</label><input data-field="name" ${this._isShrimpTank() ? "" : 'list="species_library"'} value="${this._escape(v("name"))}"></div>
+        <div class="form-field"><label>Type</label><select data-field="livestock_type"><option value="fish" ${(item?.livestock_type || (this._isShrimpTank() ? "shrimp" : "fish")) === "fish" ? "selected" : ""}>Fish</option><option value="shrimp" ${(item?.livestock_type || (this._isShrimpTank() ? "shrimp" : "fish")) === "shrimp" ? "selected" : ""}>Shrimp</option><option value="snail" ${(item?.livestock_type || "") === "snail" ? "selected" : ""}>Snail</option><option value="other" ${(item?.livestock_type || "") === "other" ? "selected" : ""}>Other</option></select></div>
         <div class="form-field"><label>Quantity</label><input data-field="quantity" type="number" min="1" step="1" value="${this._escape(item ? v("quantity") : 1)}"></div>
         ${advanced}
         <div class="form-field full"><label>Notes</label><textarea data-field="notes" rows="3">${this._escape(v("notes"))}</textarea></div>
-      </div><div class="modal-actions">${item ? `<button class="danger-btn" data-delete>Delete</button>` : ""}<button data-close>Cancel</button><button class="primary" data-save>${item ? "Save changes" : "Add fish"}</button></div></div>`);
+      </div><div class="modal-actions">${item ? `<button class="danger-btn" data-delete>Delete</button>` : ""}<button data-close>Cancel</button><button class="primary" data-save>${item ? "Save changes" : "Add livestock"}</button></div></div>`);
     this.shadowRoot.querySelector("[data-save]").addEventListener("click", () => this._saveStockForm(item));
     if (item) this.shadowRoot.querySelector("[data-delete]").addEventListener("click", () => this._removeStock(item));
   }
@@ -1569,11 +1607,11 @@ class AquariumManagerCard extends HTMLElement {
     const name = get("name").trim(); const quantity = Number(get("quantity"));
     if (!name || !Number.isInteger(quantity) || quantity < 1) return;
     if (!existing) {
-      await this._hass.callService("aquarium_manager","add_stock",{entry_id:entryId,name,quantity,notes:get("notes").trim()});
+      await this._hass.callService("aquarium_manager","add_stock",{entry_id:entryId,name,quantity,livestock_type:get("livestock_type") || (this._isShrimpTank() ? "shrimp" : "fish"),notes:get("notes").trim()});
       this._closeModal(); return;
     }
-    const numeric = ["adult_size_cm","temperature_min","temperature_max","ph_min","ph_max","gh_min","gh_max","kh_min","kh_max","min_group_size","min_tank_length_cm","min_tank_width_cm","min_tank_height_cm"];
-    const payload = {entry_id:entryId,stock_id:existing.id,name,quantity,scientific_name:get("scientific_name").trim(),social_type:get("social_type").trim(),temperament:get("temperament").trim(),swimming_zone:get("swimming_zone").trim(),notes:get("notes").trim()};
+    const numeric = ["adult_size_cm","temperature_min","temperature_max","ph_min","ph_max","gh_min","gh_max","kh_min","kh_max","tds_min","tds_max","min_group_size","min_tank_length_cm","min_tank_width_cm","min_tank_height_cm"];
+    const payload = {entry_id:entryId,stock_id:existing.id,name,quantity,livestock_type:get("livestock_type") || "fish",scientific_name:get("scientific_name").trim(),social_type:get("social_type").trim(),temperament:get("temperament").trim(),swimming_zone:get("swimming_zone").trim(),notes:get("notes").trim()};
     numeric.forEach(key => { const raw=get(key).trim(); payload[key]=raw===""?null:Number(raw); });
     await this._hass.callService("aquarium_manager","update_stock",payload);
     this._closeModal();
