@@ -202,9 +202,12 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
             light_2 = str(user_input.get(CONF_LIGHT_2_SWITCH, "") or "").strip()
             co2_switch = str(user_input.get(CONF_CO2_SWITCH, "") or "").strip()
             lighting_enabled = bool(user_input.get(CONF_LIGHTING_AUTOMATION_ENABLED, False))
+            is_shrimp_tank = self.config_entry.data.get(CONF_TANK_PROFILE) == TANK_PROFILE_SHRIMP
+            default_half = 0 if is_shrimp_tank else DEFAULT_HALF_LIGHT_DURATION_MIN
+            default_co2_off = 0 if is_shrimp_tank else DEFAULT_CO2_OFF_BEFORE_END_MIN
             light_duration = float(user_input.get(CONF_LIGHT_DURATION_HOURS, DEFAULT_LIGHT_DURATION_HOURS))
-            half_duration = int(user_input.get(CONF_HALF_LIGHT_DURATION_MIN, DEFAULT_HALF_LIGHT_DURATION_MIN))
-            co2_off_before = int(user_input.get(CONF_CO2_OFF_BEFORE_END_MIN, DEFAULT_CO2_OFF_BEFORE_END_MIN))
+            half_duration = int(user_input.get(CONF_HALF_LIGHT_DURATION_MIN, default_half))
+            co2_off_before = int(user_input.get(CONF_CO2_OFF_BEFORE_END_MIN, default_co2_off))
             lights_on_time = _normalize_clock_time(
                 user_input.get(CONF_LIGHTS_ON_TIME, DEFAULT_LIGHTS_ON_TIME)
             )
@@ -227,7 +230,7 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
                 errors[CONF_LIGHTS_ON_TIME] = "invalid_time"
             elif any(entity and not entity.startswith("switch.") for entity in (light_1, light_2, co2_switch)):
                 errors[CONF_LIGHT_1_SWITCH] = "invalid_switch"
-            elif lighting_enabled and not (light_1 and light_2 and co2_switch):
+            elif lighting_enabled and not light_1:
                 errors[CONF_LIGHTING_AUTOMATION_ENABLED] = "lighting_switches_required"
             elif light_1 and light_2 and light_1 == light_2:
                 errors[CONF_LIGHT_2_SWITCH] = "lights_must_differ"
@@ -246,12 +249,17 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
         current_light_1 = str(self.config_entry.options.get(CONF_LIGHT_1_SWITCH, "") or "")
         current_light_2 = str(self.config_entry.options.get(CONF_LIGHT_2_SWITCH, "") or "")
         current_co2 = str(self.config_entry.options.get(CONF_CO2_SWITCH, "") or "")
+        is_shrimp_tank = self.config_entry.data.get(CONF_TANK_PROFILE) == TANK_PROFILE_SHRIMP
+        default_half = 0 if is_shrimp_tank else DEFAULT_HALF_LIGHT_DURATION_MIN
+        default_blue = 0 if is_shrimp_tank else DEFAULT_BLUE_LIGHT_DURATION_MIN
+        default_co2_lead = 0 if is_shrimp_tank else DEFAULT_CO2_LEAD_MIN
+        default_co2_off = 0 if is_shrimp_tank else DEFAULT_CO2_OFF_BEFORE_END_MIN
         current_lights_on = _normalize_clock_time(
             self.config_entry.options.get(CONF_LIGHTS_ON_TIME, DEFAULT_LIGHTS_ON_TIME)
         ) or DEFAULT_LIGHTS_ON_TIME
         current_lighting_enabled = bool(self.config_entry.options.get(
             CONF_LIGHTING_AUTOMATION_ENABLED,
-            DEFAULT_LIGHTING_AUTOMATION_ENABLED if (current_light_1 and current_light_2 and current_co2) else False,
+            DEFAULT_LIGHTING_AUTOMATION_ENABLED if current_light_1 else False,
         ))
         current_enabled = bool(self.config_entry.options.get(
             CONF_BACKUP_HEATER_AUTOMATION_ENABLED,
@@ -328,19 +336,19 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
             ): duration_selector,
             vol.Optional(
                 CONF_HALF_LIGHT_DURATION_MIN,
-                default=int(self.config_entry.options.get(CONF_HALF_LIGHT_DURATION_MIN, DEFAULT_HALF_LIGHT_DURATION_MIN)),
+                default=int(self.config_entry.options.get(CONF_HALF_LIGHT_DURATION_MIN, default_half)),
             ): lighting_minutes_selector,
             vol.Optional(
                 CONF_BLUE_LIGHT_DURATION_MIN,
-                default=int(self.config_entry.options.get(CONF_BLUE_LIGHT_DURATION_MIN, DEFAULT_BLUE_LIGHT_DURATION_MIN)),
+                default=int(self.config_entry.options.get(CONF_BLUE_LIGHT_DURATION_MIN, default_blue)),
             ): lighting_minutes_selector,
             vol.Optional(
                 CONF_CO2_LEAD_MIN,
-                default=int(self.config_entry.options.get(CONF_CO2_LEAD_MIN, DEFAULT_CO2_LEAD_MIN)),
+                default=int(self.config_entry.options.get(CONF_CO2_LEAD_MIN, default_co2_lead)),
             ): lighting_minutes_selector,
             vol.Optional(
                 CONF_CO2_OFF_BEFORE_END_MIN,
-                default=int(self.config_entry.options.get(CONF_CO2_OFF_BEFORE_END_MIN, DEFAULT_CO2_OFF_BEFORE_END_MIN)),
+                default=int(self.config_entry.options.get(CONF_CO2_OFF_BEFORE_END_MIN, default_co2_off)),
             ): lighting_minutes_selector,
             vol.Optional(
                 CONF_LIGHT_MODE_TOGGLE_SECONDS,
