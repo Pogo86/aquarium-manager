@@ -999,7 +999,7 @@ class AquariumManagerCard extends HTMLElement {
     this._showModal(`
       <div class="modal-head"><div><div class="modal-title">Update water readings</div><div class="modal-subtitle">One complete aquarium water-test snapshot</div></div><button class="icon-btn" data-close><ha-icon icon="mdi:close"></ha-icon></button></div>
       <div class="modal-body">
-        <div class="water-test-note">Enter all six results, then submit them together. The reagent timers run in Home Assistant, so they keep running even if you close this popup or leave the dashboard.</div>
+        <div class="water-test-note">Enter the current water-test results, then submit them together. The reagent timers run in Home Assistant, so they keep running even if you close this popup or leave the dashboard.</div>
         <div class="water-test-grid">
           ${this._waterReadingField("ammonia","NH₃ / NH₄","mg/L","0.01","ammonia","Start 10 min")}
           ${this._waterReadingField("nitrite","NO₂","mg/L","0.01","nitrite","Start 2 min")}
@@ -1007,6 +1007,7 @@ class AquariumManagerCard extends HTMLElement {
           ${this._waterReadingField("ph","pH","","0.1")}
           ${this._waterReadingField("gh","GH","dGH","1")}
           ${this._waterReadingField("kh","KH","dKH","1")}
+          ${this._isShrimpTank() ? this._waterReadingField("tds","TDS","ppm","1") : ""}
         </div>
         <div id="water_test_message" class="water-test-message" style="margin-top:12px"></div>
         <div class="modal-actions"><button data-close>Cancel</button><button id="water_submit_readings" class="primary">Submit readings</button></div>
@@ -1080,7 +1081,7 @@ class AquariumManagerCard extends HTMLElement {
       values[input.dataset.readingKey] = value;
     });
     if (invalid) {
-      if (message) message.textContent = "Enter all six readings before submitting";
+      if (message) message.textContent = "Enter all displayed readings before submitting";
       return;
     }
     button.disabled = true;
