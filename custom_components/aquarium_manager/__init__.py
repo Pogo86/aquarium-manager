@@ -100,6 +100,7 @@ from .github_library import GitHubLibraryError, GitHubLibraryWriter, github_targ
 from .heater import BackupHeaterController
 from .lighting import AquariumLightingController
 from .filtering import default_filter_data, normalize_filter_data
+from .shared_settings import async_get_shared_settings
 
 
 @dataclass
@@ -259,6 +260,7 @@ def _normalize_lighting_time(value: str) -> str:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Aquarium Manager, frontend assets, and register actions."""
     hass.data.setdefault(DOMAIN, {})
+    await async_get_shared_settings(hass)
 
     # Serve the bundled Lovelace card from a stable, version-independent URL.
     # HACS updates files inside the integration directory, so dashboards never
@@ -833,12 +835,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: AquariumManagerConfigEntry
 ) -> bool:
     """Set up Aquarium Manager from a config entry."""
-    library_url = str(entry.options.get(CONF_SPECIES_LIBRARY_URL, "") or "").strip()
+    shared_settings = await async_get_shared_settings(hass)
     runtime = AquariumRuntimeData(
         hass=hass,
         entry_id=entry.entry_id,
-        library_url=library_url,
-        github_token=str(entry.options.get(CONF_GITHUB_TOKEN, "") or "").strip(),
+        library_url=shared_settings.species_library_url,
+        github_token=shared_settings.github_token,
         water_test_notify_entity=str(entry.options.get(CONF_WATER_TEST_NOTIFY_ENTITY, "") or "").strip(),
     )
     await runtime.async_load()
