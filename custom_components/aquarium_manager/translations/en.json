@@ -84,7 +84,7 @@
       "heater_required": "Choose a backup heater switch before enabling automation.",
       "temperature_required": "An existing aquarium temperature sensor is required for backup-heater automation.",
       "off_must_exceed_on": "The OFF temperature must be higher than the ON temperature.",
-      "lighting_switches_required": "Choose both light switches and the CO2 switch before enabling lighting automation.",
+      "lighting_switches_required": "Choose at least Light 1 before enabling lighting automation. Light 2 and CO2 are optional.",
       "lights_must_differ": "Light 1 and Light 2 must be different switch entities.",
       "half_exceeds_duration": "The half-light period cannot be longer than the main photoperiod.",
       "co2_off_exceeds_duration": "CO2 cannot be scheduled to stop more minutes before lights-out than the whole photoperiod.",
