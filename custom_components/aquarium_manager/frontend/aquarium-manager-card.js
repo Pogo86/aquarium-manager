@@ -1490,9 +1490,9 @@ class AquariumManagerCard extends HTMLElement {
     const total = Number(state.state) || 0;
     const bioload = state.attributes?.relative_bioload_points_total ?? state.attributes?.estimated_bioload_points_total;
     const density = state.attributes?.relative_bioload_points_per_l;
-    this._setText("livestock_total", `${total} fish`);
-    const loadText = bioload !== null && bioload !== undefined ? ` · ${this._fmt(bioload)} relative pts${density !== null && density !== undefined ? ` · ${this._fmt(density)} pts/L` : ""}` : "";
-    this._setText("stock_summary", `${total} fish · ${stock.length} ${stock.length === 1 ? "group" : "groups"}${loadText}`);
+    this._setText("livestock_total", `${total} livestock`);
+    const loadText = !this._isShrimpTank() && bioload !== null && bioload !== undefined ? ` · ${this._fmt(bioload)} relative pts${density !== null && density !== undefined ? ` · ${this._fmt(density)} pts/L` : ""}` : "";
+    this._setText("stock_summary", `${total} livestock · ${stock.length} ${stock.length === 1 ? "group" : "groups"}${loadText}`);
     if (!stock.length) { list.innerHTML = `<div class="empty">No livestock recorded yet.</div>`; return; }
     list.innerHTML = stock.map(item => {
       const warnings = (item.warnings || []).filter(w => w.severity !== "info");
@@ -1538,11 +1538,11 @@ class AquariumManagerCard extends HTMLElement {
       <div class="modal-head"><div><div class="modal-title">${this._escape(item.name)}</div><div class="modal-subtitle">${this._escape(item.scientific_name || "No scientific name")}</div></div><button class="icon-btn" data-close><ha-icon icon="mdi:close"></ha-icon></button></div>
       <div class="modal-body">
         <div class="detail-grid">
-          ${this._detail("Quantity", item.quantity)}${this._detail("Adult size", this._unit(item.adult_size_cm,"cm"))}
+          ${this._detail("Quantity", item.quantity)}${this._detail("Type", item.livestock_type || "fish")}${this._detail("Adult size", this._unit(item.adult_size_cm,"cm"))}
           ${this._detail("Relative bioload", item.bioload_points_group === null || item.bioload_points_group === undefined ? "Unknown" : `${this._fmt(item.bioload_points_group)} pts group`)}
           ${this._detail("Relative load / fish", item.bioload_points_each === null || item.bioload_points_each === undefined ? "Unknown" : `${this._fmt(item.bioload_points_each)} pts`)}
           ${this._detail("Temperature", this._range(item.temperature_min,item.temperature_max,"°C"))}${this._detail("pH", this._range(item.ph_min,item.ph_max,""))}
-          ${this._detail("GH", this._range(item.gh_min,item.gh_max,"dGH"))}${this._detail("KH", this._range(item.kh_min,item.kh_max,"dKH"))}
+          ${this._detail("GH", this._range(item.gh_min,item.gh_max,"dGH"))}${this._detail("KH", this._range(item.kh_min,item.kh_max,"dKH"))}${(item.livestock_type || "fish") !== "fish" ? this._detail("TDS", this._range(item.tds_min,item.tds_max,"ppm")) : ""}
           ${this._detail("Minimum group", item.min_group_size ?? "Not set")}${this._detail("Social", item.social_type || "Not set")}
           ${this._detail("Min tank", this._tankRange(item))}${this._detail("Swimming zone", item.swimming_zone || "Not set")}
           ${this._detail("Temperament", item.temperament || "Not set")}
