@@ -274,14 +274,14 @@ class AquariumManagerCard extends HTMLElement {
             <section class="section">
               <div class="section-title-row"><div class="section-title"><ha-icon icon="mdi:test-tube"></ha-icon>Current aquarium water</div><button id="open_water_readings" class="water-update-btn">Update readings</button></div>
               <div class="parameter-grid">
-                ${this._waterValueBox("ammonia","NH₃ / NH₄","mg/L")}${this._waterValueBox("nitrite","NO₂","mg/L")}${this._waterValueBox("nitrate","NO₃","mg/L")}${this._waterValueBox("ph","pH","")}${this._waterValueBox("gh","GH","dGH")}${this._waterValueBox("kh","KH","dKH")}
+                ${this._waterValueBox("ammonia","NH₃ / NH₄","mg/L")}${this._waterValueBox("nitrite","NO₂","mg/L")}${this._waterValueBox("nitrate","NO₃","mg/L")}${this._waterValueBox("ph","pH","")}${this._waterValueBox("gh","GH","dGH")}${this._waterValueBox("kh","KH","dKH")}${this._isShrimpTank() ? this._waterValueBox("tds","TDS","ppm") : ""}
               </div>
               <div id="last_water_test" class="water-last-test">No submitted test recorded</div>
               <div id="water_warning" class="water-warning"></div>
             </section>
 
             <section class="section"><div class="section-title"><ha-icon icon="mdi:home-water"></ha-icon>Source water</div><div class="source-grid">
-              ${this._numberBox("source_nitrate","NO₃","mg/L","0.5")}${this._numberBox("source_ph","pH","","0.1")}${this._numberBox("source_gh","GH","dGH","1")}${this._numberBox("source_kh","KH","dKH","1")}
+              ${this._numberBox("source_nitrate","NO₃","mg/L","0.5")}${this._numberBox("source_ph","pH","","0.1")}${this._numberBox("source_gh","GH","dGH","1")}${this._numberBox("source_kh","KH","dKH","1")}${this._isShrimpTank() ? this._numberBox("source_tds","TDS","ppm","1") : ""}
             </div></section>
 
             <section class="section"><div class="section-title"><ha-icon icon="mdi:compare-horizontal"></ha-icon>Change from source water</div><div class="delta-grid">
@@ -406,7 +406,7 @@ class AquariumManagerCard extends HTMLElement {
     this._setText("kh_delta", this._signedDisplay(this._sensorEntity("kh_delta")));
     this._setText("nitrate_delta", this._signedDisplay(this._sensorEntity("nitrate_delta")));
 
-    for (const key of ["ammonia","nitrite","nitrate","ph","gh","kh"]) {
+    for (const key of this._isShrimpTank() ? ["ammonia","nitrite","nitrate","ph","gh","kh","tds"] : ["ammonia","nitrite","nitrate","ph","gh","kh"]) {
       this._setText(`water_value_${key}`, this._display(this._numberEntity(key)));
     }
 
