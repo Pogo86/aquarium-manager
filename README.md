@@ -123,3 +123,32 @@ tanks:
 
 Existing single-tank card configuration remains supported.
 
+## v0.9.8 shrimp and multi-aquarium support
+
+Aquarium Manager now supports mixed multi-tank setups including dedicated freshwater shrimp aquariums.
+
+- Add each physical aquarium as its own Aquarium Manager config entry.
+- Choose **Shrimp aquarium** during setup for a dedicated shrimp tank.
+- Livestock records can be Fish, Shrimp, Snail or Other.
+- Shrimp and other invertebrates are excluded from fish-only shoaling and relative fish-bioload calculations.
+- Shrimp/invertebrate records can store temperature, pH, GH, KH and TDS ranges.
+- TDS and source-water TDS entities are available; the shrimp dashboard adds TDS to the water-test view.
+- Fish-only compatible-fish and species-library navigation is hidden when a card tank is marked with `tank_profile: shrimp`.
+
+Example dashboard:
+
+```yaml
+type: custom:aquarium-manager-card
+tanks:
+  - tank_name: Main Aquarium
+    entity_prefix: main_aquarium
+    water_type: Freshwater
+    tank_profile: community
+  - tank_name: Shrimp Tank
+    entity_prefix: shrimp_tank
+    water_type: Freshwater
+    tank_profile: shrimp
+```
+
+Existing single-tank and fish records remain compatible; missing livestock types are treated as Fish.
+
