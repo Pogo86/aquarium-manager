@@ -29,6 +29,7 @@ class AquariumManagerCard extends HTMLElement {
         entity_prefix: prefix,
         entities: tank?.entities || {},
         water_type: tank?.water_type || "",
+        tank_profile: tank?.tank_profile || "community",
       };
     };
 
@@ -62,6 +63,8 @@ class AquariumManagerCard extends HTMLElement {
   }
 
   getCardSize() { return 11; }
+
+  _isShrimpTank() { return this._config?.tank_profile === "shrimp"; }
 
   _entity(key, domain, suffix) {
     return this._config.entities?.[key] || `${domain}.${this._config.entity_prefix}_${suffix}`;
@@ -108,9 +111,9 @@ class AquariumManagerCard extends HTMLElement {
   _numberEntity(key) {
     const map = {
       ammonia: ["number", "ammonia"], nitrite: ["number", "nitrite"], nitrate: ["number", "nitrate"],
-      ph: ["number", "ph"], gh: ["number", "gh"], kh: ["number", "kh"],
+      ph: ["number", "ph"], gh: ["number", "gh"], kh: ["number", "kh"], tds: ["number", "tds"],
       source_nitrate: ["number", "source_water_nitrate"], source_ph: ["number", "source_water_ph"],
-      source_gh: ["number", "source_water_gh"], source_kh: ["number", "source_water_kh"],
+      source_gh: ["number", "source_water_gh"], source_kh: ["number", "source_water_kh"], source_tds: ["number", "source_water_tds"],
     };
     const [domain, suffix] = map[key];
     return this._entity(key, domain, suffix);
