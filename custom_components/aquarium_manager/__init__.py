@@ -151,7 +151,15 @@ class AquariumRuntimeData:
             for item in stocking:
                 if not isinstance(item, dict):
                     continue
-                enriched, item_changed = self.library.enrich_stock_item(item)
+                if str(item.get("livestock_type") or LIVESTOCK_TYPE_FISH) == LIVESTOCK_TYPE_FISH:
+                    enriched, item_changed = self.library.enrich_stock_item(item)
+                else:
+                    enriched = dict(item)
+                    enriched.setdefault("profile_id", None)
+                    enriched.setdefault("profile_overrides", [])
+                    enriched.setdefault("tds_min", None)
+                    enriched.setdefault("tds_max", None)
+                    item_changed = enriched != item
                 migrated.append(enriched)
                 changed = changed or item_changed
             self.stocking = migrated
@@ -188,7 +196,10 @@ class AquariumRuntimeData:
             if success:
                 refreshed: list[dict[str, Any]] = []
                 for item in self.stocking:
-                    enriched, item_changed = self.library.enrich_stock_item(item)
+                    if str(item.get("livestock_type") or LIVESTOCK_TYPE_FISH) == LIVESTOCK_TYPE_FISH:
+                        enriched, item_changed = self.library.enrich_stock_item(item)
+                    else:
+                        enriched, item_changed = dict(item), False
                     refreshed.append(enriched)
                     changed = changed or item_changed
                 self.stocking = refreshed
@@ -394,7 +405,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "notes": call.data.get("notes", "").strip(),
             "profile_overrides": [],
         }
-        item, _ = runtime.library.enrich_stock_item(item)
+        if item["livestock_type"] == LIVESTOCK_TYPE_FISH:
+            item, _ = runtime.library.enrich_stock_item(item)
+        else:
+            item.update({
+                "profile_id": None,
+                "adult_size_cm": None,
+                "temperature_min": None,
+                "temperature_max": None,
+                "ph_min": None,
+                "ph_max": None,
+                "gh_min": None,
+                "gh_max": None,
+                "kh_min": None,
+                "kh_max": None,
+                "tds_min": None,
+                "tds_max": None,
+                "min_group_size": None,
+                "min_tank_length_cm": None,
+                "min_tank_width_cm": None,
+                "min_tank_height_cm": None,
+                "min_tank_volume_l": None,
+                "social_type": "",
+                "temperament": "",
+                "swimming_zone": "",
+                "cautions": [],
+                "source_label": "",
+                "source_url": "",
+            })
         runtime.stocking.append(item)
         await runtime.async_save_stocking()
 
@@ -428,7 +466,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     overrides.add(key)
 
             new_name = str(updated.get("name", ""))
-            if new_name and new_name.casefold() != old_name.casefold():
+            livestock_type = str(updated.get("livestock_type") or LIVESTOCK_TYPE_FISH)
+            if livestock_type != LIVESTOCK_TYPE_FISH:
+                updated["profile_id"] = None
+                updated["source_label"] = ""
+                updated["source_url"] = ""
+                updated["cautions"] = []
+                updated["profile_overrides"] = sorted(overrides)
+            elif new_name and new_name.casefold() != old_name.casefold():
                 profile = runtime.library.match(new_name)
                 if profile is not None:
                     # Selecting a different known species starts from that library
