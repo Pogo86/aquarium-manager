@@ -33,14 +33,14 @@
         "title": "Aquarium options",
         "description": "Configure the remote fish library, GitHub editing, water-test notifications, backup heater, lighting schedule and CO2 automation.",
         "data": {
-          "species_library_url": "Fish library JSON URL",
+          "species_library_url": "Shared species library JSON URL",
           "backup_heater_switch": "Backup heater plug switch",
           "backup_heater_automation_enabled": "Enable backup heater automation",
           "backup_heater_on_temp_c": "Turn backup heater on below",
           "backup_heater_off_temp_c": "Turn backup heater off at",
           "backup_heater_low_delay_min": "Low-temperature delay",
           "backup_heater_max_runtime_min": "Maximum continuous runtime",
-          "github_token": "GitHub write token (optional)",
+          "github_token": "Shared GitHub write token (optional)",
           "light_1_switch": "Aquarium light 1 plug",
           "light_2_switch": "Aquarium light 2 plug",
           "co2_switch": "CO2 solenoid / plug",
@@ -55,7 +55,7 @@
           "water_test_notify_entity": "Water-test notification target (optional)"
         },
         "data_description": {
-          "species_library_url": "Use the Raw GitHub URL to fish_library.json. The last valid copy is cached and refreshed every 24 hours.",
+          "species_library_url": "Shared across all aquariums. Enter the Raw GitHub URL once; every tank uses the same species database. The last valid copy is cached and refreshed every 24 hours.",
           "backup_heater_switch": "Choose the Home Assistant switch entity for the second heater.",
           "backup_heater_automation_enabled": "When enabled, Aquarium Manager manages the backup heater using the aquarium temperature probe and the safety settings below.",
           "backup_heater_on_temp_c": "The temperature must stay below this threshold for the configured delay before the backup heater turns on.",
