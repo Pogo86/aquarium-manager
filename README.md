@@ -152,3 +152,16 @@ tanks:
 
 Existing single-tank and fish records remain compatible; missing livestock types are treated as Fish.
 
+## v0.9.9 flexible lighting hardware
+
+Lighting automation is now configured per aquarium rather than assuming every tank uses the main aquarium hardware.
+
+- Light 1 is the only required device when lighting automation is enabled.
+- Light 2 is optional.
+- CO2 is optional.
+- A single-light/no-CO2 aquarium can use a simple timed on/off photoperiod by setting half-light and blue durations to 0.
+- One or more mode-cycling lights can still use Full → Half → Blue scheduling.
+- CO2 pre-charge and CO2-off stages are ignored when no CO2 switch is configured.
+- Shrimp aquariums default to 0 minutes for half light, blue light and CO2 timing, giving a simple on/off schedule unless changed.
+- Existing two-light + CO2 community-tank setups remain supported.
+
