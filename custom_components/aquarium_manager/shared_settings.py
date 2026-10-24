@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -24,6 +24,7 @@ class SharedAquariumSettings:
     hass: HomeAssistant
     species_library_url: str = ""
     github_token: str = ""
+    _store: Store[dict[str, Any]] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self._store = Store[dict[str, Any]](
