@@ -810,7 +810,7 @@ class AquariumManagerCard extends HTMLElement {
 
     if (!state || state.state === "not_configured") {
       status.textContent = "Not configured";
-      reason.textContent = "Select both light plugs and the CO₂ plug in Aquarium Manager → Configure";
+      reason.textContent = "Select at least one light plug in Aquarium Manager → Configure. Light 2 and CO₂ are optional.";
       devices.innerHTML = "";
       schedule.innerHTML = "";
       offButton.disabled = true;
@@ -824,15 +824,15 @@ class AquariumManagerCard extends HTMLElement {
     const lightStates = a.light_states || {};
     const lightEntries = Object.entries(lightStates);
     const pills = lightEntries.map(([entity, value], i) => `<span class="device-dot ${value==="on"?"on":""}">Light ${i+1}: ${this._escape(value)}</span>`);
-    pills.push(`<span class="device-dot ${a.co2_state==="on"?"on":""}">CO₂: ${this._escape(a.co2_state || "—")}</span>`);
+    if (a.co2_configured === true || a.co2_switch) pills.push(`<span class="device-dot ${a.co2_state==="on"?"on":""}">CO₂: ${this._escape(a.co2_state || "—")}</span>`);
     devices.innerHTML = pills.join("");
 
     const rows = [
-      ["CO₂ on", a.co2_on],
+      ...(a.co2_configured === true || a.co2_switch ? [["CO₂ on", a.co2_on]] : []),
       ["Full light", a.lights_on],
-      ["Half light", a.half_light_start],
-      ["CO₂ off", a.co2_off],
-      ["Blue light", a.blue_light_start],
+      ...(Number(a.half_light_duration_min || 0) > 0 ? [["Half light", a.half_light_start]] : []),
+      ...(a.co2_configured === true || a.co2_switch ? [["CO₂ off", a.co2_off]] : []),
+      ...(Number(a.blue_light_duration_min || 0) > 0 ? [["Blue light", a.blue_light_start]] : []),
       ["Lights off", a.lights_off],
     ];
     schedule.innerHTML = rows.map(([label, value]) => `<div class="schedule-item"><div class="schedule-label">${label}</div><div class="schedule-value">${this._shortTime(value)}</div></div>`).join("");
@@ -908,7 +908,16 @@ class AquariumManagerCard extends HTMLElement {
     const blueEnd = mainEnd + v.blue_light_duration_min;
     const co2On = start - v.co2_lead_min;
     const co2Off = mainEnd - v.co2_off_before_end_min;
-    el.textContent = `CO₂ ${this._fmtMinutes(co2On)} · Full ${this._fmtMinutes(start)} · Half ${this._fmtMinutes(half)} · CO₂ off ${this._fmtMinutes(co2Off)} · Blue ${this._fmtMinutes(mainEnd)} · Off ${this._fmtMinutes(blueEnd)}`;
+    const parts = [];
+    const lightingState = this._state(this._sensorEntity("lighting_automation"));
+    const co2Configured = lightingState?.attributes?.co2_configured === true || !!lightingState?.attributes?.co2_switch;
+    if (co2Configured) parts.push(`CO₂ ${this._fmtMinutes(co2On)}`);
+    parts.push(`Full ${this._fmtMinutes(start)}`);
+    if (v.half_light_duration_min > 0) parts.push(`Half ${this._fmtMinutes(half)}`);
+    if (co2Configured) parts.push(`CO₂ off ${this._fmtMinutes(co2Off)}`);
+    if (v.blue_light_duration_min > 0) parts.push(`Blue ${this._fmtMinutes(mainEnd)}`);
+    parts.push(`Off ${this._fmtMinutes(blueEnd)}`);
+    el.textContent = parts.join(" · ");
   }
 
   async _saveLightingSchedule() {
