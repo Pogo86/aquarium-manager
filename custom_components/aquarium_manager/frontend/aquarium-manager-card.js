@@ -250,8 +250,7 @@ class AquariumManagerCard extends HTMLElement {
           <button id="tab_btn_water" class="tab-btn" role="tab" aria-selected="false">Water</button>
           <button id="tab_btn_stocking" class="tab-btn" role="tab" aria-selected="false">Stocking</button>
           <button id="tab_btn_equipment" class="tab-btn" role="tab" aria-selected="false">Equipment</button>
-          <button id="tab_btn_compat" class="tab-btn" role="tab" aria-selected="false">Compatible fish</button>
-          <button id="tab_btn_library" class="tab-btn" role="tab" aria-selected="false">Species Library</button>
+          ${this._isShrimpTank() ? "" : `<button id="tab_btn_compat" class="tab-btn" role="tab" aria-selected="false">Compatible fish</button><button id="tab_btn_library" class="tab-btn" role="tab" aria-selected="false">Species Library</button>`}
         </div>
 
         <div class="content">
@@ -371,7 +370,7 @@ class AquariumManagerCard extends HTMLElement {
       input.addEventListener("keydown", e => { if (e.key === "Enter") e.currentTarget.blur(); });
     });
     this.shadowRoot.getElementById("add_fish").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); this._openEdit(null); });
-    this.shadowRoot.getElementById("refresh_library").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); this._refreshLibrary(); });
+    this.shadowRoot.getElementById("refresh_library")?.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); this._refreshLibrary(); });
     this.shadowRoot.getElementById("attention_status").addEventListener("click", () => this._openPrimaryAttention());
     this.shadowRoot.getElementById("tank_selector")?.addEventListener("change", event => this._selectTank(Number(event.currentTarget.value)));
     this.shadowRoot.getElementById("backup_heater_mode_auto").addEventListener("click", () => this._setBackupHeaterMode("Auto"));
@@ -388,8 +387,8 @@ class AquariumManagerCard extends HTMLElement {
     for (const tab of ["overview","water","stocking","equipment","compat","library"]) {
       this.shadowRoot.getElementById(`tab_btn_${tab}`)?.addEventListener("click", () => this._setTab(tab));
     }
-    this.shadowRoot.getElementById("species_search_btn").addEventListener("click", () => this._searchSpecies());
-    this.shadowRoot.getElementById("species_search_query").addEventListener("keydown", e => { if (e.key === "Enter") this._searchSpecies(); });
+    this.shadowRoot.getElementById("species_search_btn")?.addEventListener("click", () => this._searchSpecies());
+    this.shadowRoot.getElementById("species_search_query")?.addEventListener("keydown", e => { if (e.key === "Enter") this._searchSpecies(); });
     this.shadowRoot.getElementById("modal_backdrop").addEventListener("click", e => { if (e.target.id === "modal_backdrop") this._closeModal(); });
     this._built = true;
   }
@@ -430,9 +429,9 @@ class AquariumManagerCard extends HTMLElement {
 
     this._renderStockingAssessment();
     this._renderCommunity();
-    this._renderLibrary();
+    if (!this._isShrimpTank()) this._renderLibrary();
     this._renderStocking();
-    this._renderCompatibility();
+    if (!this._isShrimpTank()) this._renderCompatibility();
     this._renderAttentionStatus();
     this._setTab(this._activeTab);
   }
