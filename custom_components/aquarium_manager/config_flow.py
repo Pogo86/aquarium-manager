@@ -56,6 +56,7 @@ from .const import (
     CONF_LENGTH_CM,
     CONF_SPECIES_LIBRARY_URL,
     CONF_TANK_NAME,
+    CONF_TANK_PROFILE,
     CONF_TEMPERATURE_ENTITY,
     CONF_WATER_DEPTH_CM,
     CONF_WATER_TYPE,
@@ -63,6 +64,8 @@ from .const import (
     DOMAIN,
     WATER_TYPE_FRESHWATER,
     WATER_TYPE_MARINE,
+    TANK_PROFILE_COMMUNITY,
+    TANK_PROFILE_SHRIMP,
 )
 from .species import is_http_url
 
@@ -159,6 +162,15 @@ class AquariumManagerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     {
                         WATER_TYPE_FRESHWATER: "Freshwater",
                         WATER_TYPE_MARINE: "Marine",
+                    }
+                ),
+                vol.Required(
+                    CONF_TANK_PROFILE,
+                    default=TANK_PROFILE_COMMUNITY,
+                ): vol.In(
+                    {
+                        TANK_PROFILE_COMMUNITY: "Community aquarium",
+                        TANK_PROFILE_SHRIMP: "Shrimp aquarium",
                     }
                 ),
                 vol.Optional(CONF_TEMPERATURE_ENTITY): EntitySelector(),
