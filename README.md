@@ -165,3 +165,14 @@ Lighting automation is now configured per aquarium rather than assuming every ta
 - Shrimp aquariums default to 0 minutes for half light, blue light and CO2 timing, giving a simple on/off schedule unless changed.
 - Existing two-light + CO2 community-tank setups remain supported.
 
+## v0.10.0 shared library settings
+
+The GitHub token and species-library JSON URL are now integration-wide settings shared by every aquarium.
+
+- Enter the species-library URL once.
+- Enter the GitHub write token once.
+- Every aquarium uses the same species database and credentials.
+- Existing per-aquarium values are migrated automatically the first time the shared settings store loads.
+- Saving either aquarium's Configure page updates the shared values for all aquariums and reloads the other entries.
+- Tank-specific settings such as dimensions, livestock, lighting, CO2, heater and filter remain separate.
+
