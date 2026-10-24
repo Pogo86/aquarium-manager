@@ -68,6 +68,7 @@ from .const import (
     TANK_PROFILE_SHRIMP,
 )
 from .species import is_http_url
+from .shared_settings import async_get_shared_settings
 
 
 def _normalize_clock_time(value: Any) -> str | None:
@@ -197,7 +198,6 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
             backup_switch = str(user_input.get(CONF_BACKUP_HEATER_SWITCH, "") or "").strip()
             water_notify = str(user_input.get(CONF_WATER_TEST_NOTIFY_ENTITY, "") or "").strip()
             github_token = str(user_input.get(CONF_GITHUB_TOKEN, "") or "").strip()
-            user_input[CONF_GITHUB_TOKEN] = github_token
             light_1 = str(user_input.get(CONF_LIGHT_1_SWITCH, "") or "").strip()
             light_2 = str(user_input.get(CONF_LIGHT_2_SWITCH, "") or "").strip()
             co2_switch = str(user_input.get(CONF_CO2_SWITCH, "") or "").strip()
@@ -240,10 +240,29 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
                 errors[CONF_CO2_OFF_BEFORE_END_MIN] = "co2_off_exceeds_duration"
             else:
                 user_input[CONF_LIGHTS_ON_TIME] = lights_on_time
-                return self.async_create_entry(data=dict(user_input))
+                shared_settings = await async_get_shared_settings(self.hass)
+                await shared_settings.async_update(
+                    species_library_url=library_url,
+                    github_token=github_token,
+                )
 
-        current_url = str(self.config_entry.options.get(CONF_SPECIES_LIBRARY_URL, "") or "")
-        current_github_token = str(self.config_entry.options.get(CONF_GITHUB_TOKEN, "") or "")
+                # Shared values live once for the whole integration, not in each tank.
+                entry_options = dict(user_input)
+                entry_options.pop(CONF_SPECIES_LIBRARY_URL, None)
+                entry_options.pop(CONF_GITHUB_TOKEN, None)
+
+                # This OptionsFlowWithReload reloads the current entry. Reload the
+                # other aquariums as well so they immediately pick up shared values.
+                for other in self.hass.config_entries.async_entries(DOMAIN):
+                    if other.entry_id != self.config_entry.entry_id:
+                        self.hass.async_create_task(
+                            self.hass.config_entries.async_reload(other.entry_id)
+                        )
+                return self.async_create_entry(data=entry_options)
+
+        shared_settings = await async_get_shared_settings(self.hass)
+        current_url = shared_settings.species_library_url
+        current_github_token = shared_settings.github_token
         current_backup_switch = str(self.config_entry.options.get(CONF_BACKUP_HEATER_SWITCH, "") or "")
         current_water_notify = str(self.config_entry.options.get(CONF_WATER_TEST_NOTIFY_ENTITY, "") or "")
         current_light_1 = str(self.config_entry.options.get(CONF_LIGHT_1_SWITCH, "") or "")
