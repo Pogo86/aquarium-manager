@@ -1563,7 +1563,7 @@ class AquariumManagerCard extends HTMLElement {
     const item = id ? stock.find(x => x.id === id) : null;
     this._modalItemId = id; this._modalMode = "edit";
     const v = (key) => item?.[key] ?? "";
-    const libraryOptions = library.map(x => `<option value="${this._escape(x.name)}">${this._escape(x.scientific_name || "")}</option>`).join("");
+    const libraryOptions = this._isShrimpTank() ? "" : library.map(x => `<option value="${this._escape(x.name)}">${this._escape(x.scientific_name || "")}</option>`).join("");
     const advanced = item ? `
       <div class="form-field"><label>Scientific name</label><input data-field="scientific_name" value="${this._escape(v("scientific_name"))}"></div>
       <div class="form-field"><label>Adult size (cm)</label><input data-field="adult_size_cm" type="number" step="0.1" value="${this._escape(v("adult_size_cm"))}"></div>
@@ -1571,6 +1571,7 @@ class AquariumManagerCard extends HTMLElement {
       ${this._rangeInputs("pH","ph_min","ph_max",v)}
       ${this._rangeInputs("GH dGH","gh_min","gh_max",v)}
       ${this._rangeInputs("KH dKH","kh_min","kh_max",v)}
+      ${(item?.livestock_type || (this._isShrimpTank() ? "shrimp" : "fish")) !== "fish" ? this._rangeInputs("TDS ppm","tds_min","tds_max",v) : ""}
       <div class="form-field"><label>Minimum group size</label><input data-field="min_group_size" type="number" step="1" min="1" value="${this._escape(v("min_group_size"))}"></div>
       <div class="form-field"><label>Social type</label><input data-field="social_type" value="${this._escape(v("social_type"))}"></div>
       <div class="form-field"><label>Minimum tank length (cm)</label><input data-field="min_tank_length_cm" type="number" step="1" value="${this._escape(v("min_tank_length_cm"))}"></div>
@@ -1580,13 +1581,14 @@ class AquariumManagerCard extends HTMLElement {
       <div class="form-field full"><label>Temperament</label><input data-field="temperament" value="${this._escape(v("temperament"))}"></div>` : `<div class="form-field full"><div class="small-help">Known species are automatically filled from the active fish library after you add them. You can then edit individual values if required.</div></div>`;
 
     this._showModal(`
-      <div class="modal-head"><div><div class="modal-title">${item ? "Edit fish" : "Add fish"}</div><div class="modal-subtitle">${item ? this._escape(item.name) : "Add a stocking group"}</div></div><button class="icon-btn" data-close><ha-icon icon="mdi:close"></ha-icon></button></div>
+      <div class="modal-head"><div><div class="modal-title">${item ? "Edit livestock" : "Add livestock"}</div><div class="modal-subtitle">${item ? this._escape(item.name) : "Add a stocking group"}</div></div><button class="icon-btn" data-close><ha-icon icon="mdi:close"></ha-icon></button></div>
       <div class="modal-body"><datalist id="species_library">${libraryOptions}</datalist><div class="form-grid">
-        <div class="form-field"><label>Species / name</label><input data-field="name" list="species_library" value="${this._escape(v("name"))}"></div>
+        <div class="form-field"><label>Species / name</label><input data-field="name" ${this._isShrimpTank() ? "" : 'list="species_library"'} value="${this._escape(v("name"))}"></div>
+        <div class="form-field"><label>Type</label><select data-field="livestock_type"><option value="fish" ${(item?.livestock_type || (this._isShrimpTank() ? "shrimp" : "fish")) === "fish" ? "selected" : ""}>Fish</option><option value="shrimp" ${(item?.livestock_type || (this._isShrimpTank() ? "shrimp" : "fish")) === "shrimp" ? "selected" : ""}>Shrimp</option><option value="snail" ${(item?.livestock_type || "") === "snail" ? "selected" : ""}>Snail</option><option value="other" ${(item?.livestock_type || "") === "other" ? "selected" : ""}>Other</option></select></div>
         <div class="form-field"><label>Quantity</label><input data-field="quantity" type="number" min="1" step="1" value="${this._escape(item ? v("quantity") : 1)}"></div>
         ${advanced}
         <div class="form-field full"><label>Notes</label><textarea data-field="notes" rows="3">${this._escape(v("notes"))}</textarea></div>
-      </div><div class="modal-actions">${item ? `<button class="danger-btn" data-delete>Delete</button>` : ""}<button data-close>Cancel</button><button class="primary" data-save>${item ? "Save changes" : "Add fish"}</button></div></div>`);
+      </div><div class="modal-actions">${item ? `<button class="danger-btn" data-delete>Delete</button>` : ""}<button data-close>Cancel</button><button class="primary" data-save>${item ? "Save changes" : "Add livestock"}</button></div></div>`);
     this.shadowRoot.querySelector("[data-save]").addEventListener("click", () => this._saveStockForm(item));
     if (item) this.shadowRoot.querySelector("[data-delete]").addEventListener("click", () => this._removeStock(item));
   }
@@ -1606,11 +1608,11 @@ class AquariumManagerCard extends HTMLElement {
     const name = get("name").trim(); const quantity = Number(get("quantity"));
     if (!name || !Number.isInteger(quantity) || quantity < 1) return;
     if (!existing) {
-      await this._hass.callService("aquarium_manager","add_stock",{entry_id:entryId,name,quantity,notes:get("notes").trim()});
+      await this._hass.callService("aquarium_manager","add_stock",{entry_id:entryId,name,quantity,livestock_type:get("livestock_type") || (this._isShrimpTank() ? "shrimp" : "fish"),notes:get("notes").trim()});
       this._closeModal(); return;
     }
-    const numeric = ["adult_size_cm","temperature_min","temperature_max","ph_min","ph_max","gh_min","gh_max","kh_min","kh_max","min_group_size","min_tank_length_cm","min_tank_width_cm","min_tank_height_cm"];
-    const payload = {entry_id:entryId,stock_id:existing.id,name,quantity,scientific_name:get("scientific_name").trim(),social_type:get("social_type").trim(),temperament:get("temperament").trim(),swimming_zone:get("swimming_zone").trim(),notes:get("notes").trim()};
+    const numeric = ["adult_size_cm","temperature_min","temperature_max","ph_min","ph_max","gh_min","gh_max","kh_min","kh_max","tds_min","tds_max","min_group_size","min_tank_length_cm","min_tank_width_cm","min_tank_height_cm"];
+    const payload = {entry_id:entryId,stock_id:existing.id,name,quantity,livestock_type:get("livestock_type") || "fish",scientific_name:get("scientific_name").trim(),social_type:get("social_type").trim(),temperament:get("temperament").trim(),swimming_zone:get("swimming_zone").trim(),notes:get("notes").trim()};
     numeric.forEach(key => { const raw=get(key).trim(); payload[key]=raw===""?null:Number(raw); });
     await this._hass.callService("aquarium_manager","update_stock",payload);
     this._closeModal();
