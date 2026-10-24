@@ -9,6 +9,7 @@ CONF_LENGTH_CM = "length_cm"
 CONF_WIDTH_CM = "width_cm"
 CONF_WATER_DEPTH_CM = "water_depth_cm"
 CONF_WATER_TYPE = "water_type"
+CONF_TANK_PROFILE = "tank_profile"
 CONF_TEMPERATURE_ENTITY = "temperature_entity"
 CONF_SPECIES_LIBRARY_URL = "species_library_url"
 CONF_GITHUB_TOKEN = "github_token"
@@ -50,6 +51,14 @@ DEFAULT_LIGHT_MODE_TOGGLE_SECONDS = 1.0
 WATER_TYPE_FRESHWATER = "freshwater"
 WATER_TYPE_MARINE = "marine"
 
+TANK_PROFILE_COMMUNITY = "community"
+TANK_PROFILE_SHRIMP = "shrimp"
+
+LIVESTOCK_TYPE_FISH = "fish"
+LIVESTOCK_TYPE_SHRIMP = "shrimp"
+LIVESTOCK_TYPE_SNAIL = "snail"
+LIVESTOCK_TYPE_OTHER = "other"
+
 MANUFACTURER = "Aquarium Manager"
 MODEL = "Virtual Aquarium"
 
@@ -78,6 +87,8 @@ ATTR_NITRATE = "nitrate"
 ATTR_PH = "ph"
 ATTR_GH = "gh"
 ATTR_KH = "kh"
+ATTR_TDS = "tds"
+ATTR_LIVESTOCK_TYPE = "livestock_type"
 ATTR_TEST_TYPE = "test_type"
 
 # Fields that can be populated from the species library and then overridden by
@@ -93,6 +104,8 @@ PROFILE_FIELDS = (
     "gh_max",
     "kh_min",
     "kh_max",
+    "tds_min",
+    "tds_max",
     "min_group_size",
     "min_tank_length_cm",
     "min_tank_width_cm",
