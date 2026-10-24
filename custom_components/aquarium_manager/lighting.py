@@ -47,7 +47,7 @@ class LightingSchedule:
 
 
 class AquariumLightingController:
-    """Manage two mode-cycling aquarium lights and one CO2 switch."""
+    """Manage one or more mode-cycling aquarium lights with optional CO2."""
 
     def __init__(
         self,
@@ -165,13 +165,15 @@ class AquariumLightingController:
     def _current_schedule(self, now: datetime) -> LightingSchedule | None:
         for offset in (-1, 0, 1):
             candidate = self._schedule_for((now + timedelta(days=offset)).date())
-            if candidate.co2_on <= now < candidate.blue_end:
+            window_start = candidate.co2_on if self.co2_switch else candidate.start
+            if window_start <= now < candidate.blue_end:
                 return candidate
         return None
 
     def _next_schedule(self, now: datetime) -> LightingSchedule:
         today = self._schedule_for(now.date())
-        if now < today.co2_on:
+        window_start = today.co2_on if self.co2_switch else today.start
+        if now < window_start:
             return today
         return self._schedule_for((now + timedelta(days=1)).date())
 
@@ -226,8 +228,8 @@ class AquariumLightingController:
 
             if not self.enabled:
                 # Fail safe when automation is disabled from the dashboard/config:
-                # never leave scheduled CO2 running with no controller managing it.
-                if len(self.light_switches) == 2:
+                # turn off all configured lighting and never leave scheduled CO2 running.
+                if self.light_switches:
                     await self._async_switch_many(self.light_switches, False)
                 if self.co2_switch:
                     await self._async_switch(self.co2_switch, False)
@@ -238,9 +240,9 @@ class AquariumLightingController:
                 self._notify()
                 return
 
-            if len(self.light_switches) != 2 or not self.co2_switch:
+            if not self.light_switches:
                 self.status = "not_configured"
-                self.reason = "Two light switches and one CO2 switch are required"
+                self.reason = "At least one light switch is required"
                 self._notify()
                 return
 
@@ -276,14 +278,15 @@ class AquariumLightingController:
                 self._notify()
                 return
 
-            co2_should_be_on = schedule.co2_on <= now < schedule.co2_off
-            await self._async_switch(self.co2_switch, co2_should_be_on)
+            if self.co2_switch:
+                co2_should_be_on = schedule.co2_on <= now < schedule.co2_off
+                await self._async_switch(self.co2_switch, co2_should_be_on)
 
             if now < schedule.start:
                 await self._async_switch_many(self.light_switches, False)
                 self.current_mode = None
-                self.status = "co2_precharge"
-                self.reason = "CO2 pre-charge before lights on"
+                self.status = "co2_precharge" if self.co2_switch else "off"
+                self.reason = "CO2 pre-charge before lights on" if self.co2_switch else "Waiting for lights-on time"
             elif now < schedule.dim_start:
                 await self._async_ensure_mode("full", force_sync=force_sync)
                 self.status = "full"
@@ -308,7 +311,7 @@ class AquariumLightingController:
             self._notify()
 
     def _lights_all_on(self) -> bool:
-        if len(self.light_switches) != 2:
+        if not self.light_switches:
             return False
         return all(
             (state := self.hass.states.get(entity)) is not None
@@ -348,7 +351,7 @@ class AquariumLightingController:
             self.current_mode = MODE_ORDER[current_index]
 
         if cycles:
-            self._record_action(f"Set both lights to {target} mode")
+            self._record_action(f"Set aquarium light(s) to {target} mode")
 
     async def _async_switch_many(self, entity_ids: list[str], on: bool) -> None:
         if not entity_ids:
@@ -408,7 +411,7 @@ class AquariumLightingController:
         co2_state = (
             self.hass.states.get(self.co2_switch).state
             if self.co2_switch and self.hass.states.get(self.co2_switch) is not None
-            else "missing"
+            else "not_configured" if not self.co2_switch else "missing"
         )
         return {
             "enabled": self.enabled,
@@ -419,6 +422,7 @@ class AquariumLightingController:
             "light_switches": list(self.light_switches),
             "light_states": light_states,
             "co2_switch": self.co2_switch,
+            "co2_configured": bool(self.co2_switch),
             "co2_state": co2_state,
             "lights_on_time": self.lights_on_time,
             "light_duration_hours": self.light_duration_hours,
