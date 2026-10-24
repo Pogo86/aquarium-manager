@@ -26,6 +26,17 @@ add_stock:
       required: false
       selector:
         text:
+    livestock_type:
+      name: Livestock type
+      required: false
+      default: fish
+      selector:
+        select:
+          options:
+            - fish
+            - shrimp
+            - snail
+            - other
     notes:
       name: Notes
       required: false
@@ -65,6 +76,16 @@ update_stock:
       required: false
       selector:
         text:
+    livestock_type:
+      name: Livestock type
+      required: false
+      selector:
+        select:
+          options:
+            - fish
+            - shrimp
+            - snail
+            - other
     adult_size_cm:
       name: Adult size
       required: false
@@ -152,6 +173,26 @@ update_stock:
           max: 50
           step: 0.1
           unit_of_measurement: dKH
+          mode: box
+    tds_min:
+      name: Minimum TDS
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 2000
+          step: 1
+          unit_of_measurement: ppm
+          mode: box
+    tds_max:
+      name: Maximum TDS
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 2000
+          step: 1
+          unit_of_measurement: ppm
           mode: box
     min_group_size:
       name: Minimum group size
@@ -305,6 +346,16 @@ submit_water_readings:
           max: 50
           step: 1
           unit_of_measurement: dKH
+          mode: box
+    tds:
+      name: TDS
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 2000
+          step: 1
+          unit_of_measurement: ppm
           mode: box
 
 
