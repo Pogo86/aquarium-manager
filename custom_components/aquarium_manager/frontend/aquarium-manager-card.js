@@ -11,6 +11,8 @@ class AquariumManagerCard extends HTMLElement {
     this._speciesSearchResult = null;
     this._waterTestTimers = {};
     this._waterTimerTicker = null;
+    this._tankConfigs = [];
+    this._activeTankIndex = 0;
   }
 
   static getStubConfig() {
@@ -19,9 +21,25 @@ class AquariumManagerCard extends HTMLElement {
 
   setConfig(config) {
     if (!config) throw new Error("Aquarium Manager card configuration is required");
-    const tankName = config.tank_name || "Main Aquarium";
-    const prefix = config.entity_prefix || tankName.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
-    this._config = { tank_name: tankName, entity_prefix: prefix, entities: config.entities || {} };
+    const normalizeTank = (tank, fallbackName) => {
+      const tankName = tank?.tank_name || tank?.name || fallbackName || "Main Aquarium";
+      const prefix = tank?.entity_prefix || tankName.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+      return {
+        tank_name: tankName,
+        entity_prefix: prefix,
+        entities: tank?.entities || {},
+        water_type: tank?.water_type || "",
+      };
+    };
+
+    if (Array.isArray(config.tanks) && config.tanks.length) {
+      this._tankConfigs = config.tanks.map((tank, index) => normalizeTank(tank, `Aquarium ${index + 1}`));
+    } else {
+      this._tankConfigs = [normalizeTank(config, "Main Aquarium")];
+    }
+
+    if (this._activeTankIndex >= this._tankConfigs.length) this._activeTankIndex = 0;
+    this._config = { ...this._tankConfigs[this._activeTankIndex] };
     this._built = false;
     if (this._hass) {
       this._build();
@@ -115,6 +133,7 @@ class AquariumManagerCard extends HTMLElement {
         .hero-top,.title-wrap,.section-title,.stock-meta,.modal-actions{display:flex;align-items:center}.hero-top{justify-content:space-between;gap:14px}.title-wrap{gap:12px}
         .tank-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:13px;background:color-mix(in srgb,var(--primary-color) 15%,transparent)}
         .tank-icon ha-icon{color:var(--primary-color);--mdc-icon-size:27px} h1{font-size:21px;margin:0 0 3px}.subline{font-size:12px;color:var(--secondary-text-color)}
+        .tank-title-block{min-width:0}.tank-switcher{margin-top:6px;display:flex;align-items:center;gap:7px}.tank-switcher select{width:auto;max-width:220px;padding:5px 28px 5px 8px;font-size:11px;border-radius:8px;background:var(--secondary-background-color)}.tank-switcher-label{font-size:10px;color:var(--secondary-text-color);text-transform:uppercase}
         .status{font-size:11px;font-weight:700;text-transform:uppercase;padding:6px 9px;border-radius:999px;background:var(--secondary-background-color)}
         .status.clear,.status.good{color:var(--success-color,#43a047);background:color-mix(in srgb,var(--success-color,#43a047) 16%,transparent)}
         .status.attention,.status.incomplete{color:var(--warning-color,#f9a825);background:color-mix(in srgb,var(--warning-color,#f9a825) 16%,transparent)}
@@ -203,13 +222,13 @@ class AquariumManagerCard extends HTMLElement {
           .filter-metrics,.filter-stages,.filter-editor-grid{grid-template-columns:1fr}.filter-actions{display:grid;grid-template-columns:1fr}.filter-actions button{width:100%;min-height:44px}
           .attention-popover{display:none}.attention-main{min-height:36px}
         }
-        @media(max-width:360px){.summary,.community-grid,.assessment-grid,.schedule-grid{grid-template-columns:1fr}.hero-top{align-items:flex-start}.tank-icon{width:40px;height:40px}.tabs{padding-left:8px;padding-right:8px}.content{padding-left:10px;padding-right:10px}}
+        @media(max-width:360px){.summary,.community-grid,.assessment-grid,.schedule-grid{grid-template-columns:1fr}.hero-top{align-items:flex-start}.tank-icon{width:40px;height:40px}.tank-switcher select{max-width:160px}.tabs{padding-left:8px;padding-right:8px}.content{padding-left:10px;padding-right:10px}}
       </style>
 
       <ha-card>
         <div class="hero">
           <div class="hero-top">
-            <div class="title-wrap"><div class="tank-icon"><ha-icon icon="mdi:fishbowl-outline"></ha-icon></div><div><h1>${this._escape(this._config.tank_name)}</h1><div class="subline">Aquarium Manager</div></div></div>
+            <div class="title-wrap"><div class="tank-icon"><ha-icon icon="mdi:fishbowl-outline"></ha-icon></div><div class="tank-title-block"><h1>${this._escape(this._config.tank_name)}</h1><div class="subline">Aquarium Manager${this._config.water_type ? " · " + this._escape(this._config.water_type) : ""}</div>${this._tankConfigs.length > 1 ? '<div class="tank-switcher"><span class="tank-switcher-label">Tank</span><select id="tank_selector" aria-label="Select aquarium">' + this._tankConfigs.map((tank,index) => '<option value="' + index + '"' + (index === this._activeTankIndex ? ' selected' : '') + '>' + this._escape(tank.tank_name) + '</option>').join("") + '</select></div>' : ""}</div></div>
             <div class="attention-wrap">
               <button id="attention_status" class="status attention-main" type="button" aria-label="Aquarium status">—</button>
               <div id="attention_popover" class="attention-popover" role="tooltip"></div>
@@ -351,6 +370,7 @@ class AquariumManagerCard extends HTMLElement {
     this.shadowRoot.getElementById("add_fish").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); this._openEdit(null); });
     this.shadowRoot.getElementById("refresh_library").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); this._refreshLibrary(); });
     this.shadowRoot.getElementById("attention_status").addEventListener("click", () => this._openPrimaryAttention());
+    this.shadowRoot.getElementById("tank_selector")?.addEventListener("change", event => this._selectTank(Number(event.currentTarget.value)));
     this.shadowRoot.getElementById("backup_heater_mode_auto").addEventListener("click", () => this._setBackupHeaterMode("Auto"));
     this.shadowRoot.getElementById("backup_heater_mode_off").addEventListener("click", () => this._setBackupHeaterMode("Off"));
     this.shadowRoot.getElementById("edit_filter").addEventListener("click", () => this._openFilterEditor());
@@ -1076,6 +1096,19 @@ class AquariumManagerCard extends HTMLElement {
     } finally {
       button.disabled = false;
     }
+  }
+
+  _selectTank(index) {
+    if (!Number.isInteger(index) || index < 0 || index >= this._tankConfigs.length || index === this._activeTankIndex) return;
+    this._activeTankIndex = index;
+    this._config = { ...this._tankConfigs[index] };
+    this._activeTab = "overview";
+    this._speciesSearchResult = null;
+    this._waterTestTimers = {};
+    this._attentionItems = [];
+    this._built = false;
+    this._build();
+    this._update();
   }
 
   _setTab(tab) {
