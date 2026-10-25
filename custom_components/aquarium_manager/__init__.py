@@ -910,21 +910,43 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def shared_github_settings(hass: HomeAssistant) -> tuple[str, str]:
-    """Read common GitHub settings from existing entries."""
+SHARED_GITHUB_STORE_KEY = "aquarium_manager.shared_github"
+SHARED_GITHUB_STORE_VERSION = 1
+
+
+async def async_shared_github_settings(hass: HomeAssistant) -> tuple[str, str]:
+    """Load one shared configuration, migrating existing per-tank options."""
+    store = Store(hass, SHARED_GITHUB_STORE_VERSION, SHARED_GITHUB_STORE_KEY)
+    saved = await store.async_load()
+    if isinstance(saved, dict):
+        return str(saved.get("url") or ""), str(saved.get("token") or "")
+
     entries = hass.config_entries.async_entries(DOMAIN)
     url = next((str(e.options.get(CONF_SPECIES_LIBRARY_URL) or "").strip()
                 for e in entries if e.options.get(CONF_SPECIES_LIBRARY_URL)), "")
     token = next((str(e.options.get(CONF_GITHUB_TOKEN) or "").strip()
                   for e in entries if e.options.get(CONF_GITHUB_TOKEN)), "")
+    if url or token:
+        await store.async_save({"url": url, "token": token})
     return url, token
+
+
+async def async_save_shared_github_settings(
+    hass: HomeAssistant, url: str, token: str, *, exclude_entry_id: str = ""
+) -> None:
+    """Persist credentials once and reload other tank libraries."""
+    store = Store(hass, SHARED_GITHUB_STORE_VERSION, SHARED_GITHUB_STORE_KEY)
+    await store.async_save({"url": url.strip(), "token": token.strip()})
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.entry_id != exclude_entry_id:
+            hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AquariumManagerConfigEntry
 ) -> bool:
     """Set up Aquarium Manager from a config entry."""
-    library_url, shared_token = shared_github_settings(hass)
+    library_url, shared_token = await async_shared_github_settings(hass)
     runtime = AquariumRuntimeData(
         hass=hass,
         entry_id=entry.entry_id,
