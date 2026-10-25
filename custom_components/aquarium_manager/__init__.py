@@ -793,7 +793,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         writer = GitHubLibraryWriter(hass, runtime.library_url, runtime.github_token)
         try:
             result = await writer.async_upsert(record)
-            await runtime.library.async_apply_document(result["document"])
+            for other in hass.data.get(DOMAIN, {}).values():
+                if isinstance(other, AquariumRuntimeData) and other.library is not None:
+                    if other.library_url == runtime.library_url:
+                        await other.library.async_apply_document(result["document"])
         except GitHubLibraryError as err:
             raise HomeAssistantError(f"Could not update GitHub fish library: {err}") from err
 
