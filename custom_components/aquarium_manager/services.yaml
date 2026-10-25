@@ -511,3 +511,7 @@ mark_filter_cleaned:
       selector:
         text:
 
+list_aquariums:
+  name: List aquariums
+  description: Return all configured Aquarium Manager tanks and their actual Home Assistant entity IDs for dashboard switching.
+
