@@ -18,6 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -82,6 +83,7 @@ from .const import (
     SERVICE_START_WATER_TEST_TIMER,
     SERVICE_UPDATE_FILTER,
     SERVICE_MARK_FILTER_CLEANED,
+    SERVICE_LIST_AQUARIUMS,
     SERVICE_REMOVE_STOCK,
     SERVICE_UPDATE_STOCK,
     SIGNAL_LIBRARY_UPDATED,
@@ -388,6 +390,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Required(ATTR_ENTRY_ID): cv.string,
         }
     )
+
+    list_aquariums_schema = vol.Schema({})
 
     async def async_add_stock(call: ServiceCall) -> None:
         """Add a livestock record and apply a known library profile."""
@@ -712,6 +716,71 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_dispatcher_send(hass, f"{SIGNAL_STOCKING_UPDATED}_{runtime.entry_id}")
         return {"filter": runtime.filter_data, "cleaned_at": now}
 
+    async def async_list_aquariums(_call: ServiceCall) -> dict[str, Any]:
+        """Return configured aquariums and their actual Home Assistant entity IDs."""
+        registry = er.async_get(hass)
+        aquarium_entries = hass.config_entries.async_entries(DOMAIN)
+        result: list[dict[str, Any]] = []
+
+        key_map = {
+            "calculated_volume": "volume",
+            "dimensions": "dimensions",
+            "temperature": "temperature",
+            "water_status": "water_status",
+            "stocking": "stocking",
+            "community": "community",
+            "compatible_fish": "compatibility",
+            "fish_library": "library",
+            "backup_heater_automation": "heater_automation",
+            "lighting_automation": "lighting_automation",
+            "filter": "filter",
+            "gh_delta": "gh_delta",
+            "kh_delta": "kh_delta",
+            "nitrate_delta": "nitrate_delta",
+            "ammonia": "ammonia",
+            "nitrite": "nitrite",
+            "nitrate": "nitrate",
+            "ph": "ph",
+            "gh": "gh",
+            "kh": "kh",
+            "tds": "tds",
+            "source_nitrate": "source_nitrate",
+            "source_ph": "source_ph",
+            "source_gh": "source_gh",
+            "source_kh": "source_kh",
+            "source_tds": "source_tds",
+            "backup_heater": "backup_heater",
+            "backup_heater_mode": "backup_heater_mode",
+            "lights_off_today": "lights_off_today",
+        }
+
+        for entry in aquarium_entries:
+            entities: dict[str, str] = {}
+            prefix = f"{entry.entry_id}_"
+            for reg_entry in registry.entities.values():
+                if reg_entry.config_entry_id != entry.entry_id:
+                    continue
+                unique_id = str(reg_entry.unique_id or "")
+                if not unique_id.startswith(prefix):
+                    continue
+                entity_key = unique_id[len(prefix):]
+                logical_key = key_map.get(entity_key)
+                if logical_key:
+                    entities[logical_key] = reg_entry.entity_id
+
+            result.append(
+                {
+                    "entry_id": entry.entry_id,
+                    "tank_name": str(entry.data.get(CONF_TANK_NAME) or entry.title),
+                    "water_type": str(entry.data.get(CONF_WATER_TYPE) or ""),
+                    "tank_profile": str(entry.data.get(CONF_TANK_PROFILE) or "community"),
+                    "entities": entities,
+                }
+            )
+
+        result.sort(key=lambda item: item["tank_name"].casefold())
+        return {"aquariums": result}
+
     async def async_add_species_to_library(call: ServiceCall) -> dict[str, Any]:
         """Commit one reviewed species record to the configured GitHub library."""
         runtime = _runtime_or_raise(hass, call.data[ATTR_ENTRY_ID])
@@ -800,6 +869,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.services.async_register(
             DOMAIN, SERVICE_MARK_FILTER_CLEANED, async_mark_filter_cleaned,
             schema=mark_filter_cleaned_schema, supports_response=SupportsResponse.ONLY,
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_LIST_AQUARIUMS):
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_LIST_AQUARIUMS,
+            async_list_aquariums,
+            schema=list_aquariums_schema,
+            supports_response=SupportsResponse.ONLY,
         )
 
     if not hass.services.has_service(DOMAIN, SERVICE_SEARCH_SPECIES):
