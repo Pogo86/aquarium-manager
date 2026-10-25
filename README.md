@@ -104,24 +104,19 @@ Backup heater control is now a two-option **Auto / Off** mode selector. **Off** 
 - Clicking the main status chip jumps to the highest-priority attention item.
 - Mobile keeps simple tap-to-navigate behavior without relying on hover.
 
-## v0.9.7 multi-aquarium dashboard
+## v0.9.9 dashboard tank switching
 
-Aquarium Manager supports multiple Home Assistant config entries, one per aquarium. Each tank keeps its own water readings, livestock, equipment, filter media and maintenance data.
-
-The dashboard card can now switch between multiple aquariums:
+Aquarium Manager can discover all configured Aquarium Manager tanks automatically and switch between them from one dashboard card.
 
 ```yaml
 type: custom:aquarium-manager-card
-tanks:
-  - tank_name: Main Aquarium
-    entity_prefix: main_aquarium
-    water_type: Freshwater
-  - tank_name: Reef Aquarium
-    entity_prefix: reef_aquarium
-    water_type: Marine
+tank_name: Main Aquarium
+entity_prefix: main_aquarium
 ```
 
-Existing single-tank card configuration remains supported.
+The existing single-tank YAML is enough. After Home Assistant loads the card, it requests the configured aquarium list from the integration and uses the actual Home Assistant entity IDs for each tank. A tank selector appears automatically when more than one Aquarium Manager config entry exists.
+
+Manual `tanks:` configuration remains supported as an override, but is no longer required.
 
 ## v0.9.8 shrimp and multi-aquarium support
 

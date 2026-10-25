@@ -1,7 +1,7 @@
 {
   "domain": "aquarium_manager",
   "name": "Aquarium Manager",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "config_flow": true,
   "documentation": "https://github.com/Pogo86/aquarium-manager",
   "issue_tracker": "https://github.com/Pogo86/aquarium-manager/issues",

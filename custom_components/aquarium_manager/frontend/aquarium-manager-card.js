@@ -13,6 +13,9 @@ class AquariumManagerCard extends HTMLElement {
     this._waterTimerTicker = null;
     this._tankConfigs = [];
     this._activeTankIndex = 0;
+    this._manualTankConfig = false;
+    this._tankDiscoveryPromise = null;
+    this._tankDiscoveryDone = false;
   }
 
   static getStubConfig() {
@@ -25,6 +28,7 @@ class AquariumManagerCard extends HTMLElement {
       const tankName = tank?.tank_name || tank?.name || fallbackName || "Main Aquarium";
       const prefix = tank?.entity_prefix || tankName.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
       return {
+        entry_id: tank?.entry_id || "",
         tank_name: tankName,
         entity_prefix: prefix,
         entities: tank?.entities || {},
@@ -33,7 +37,11 @@ class AquariumManagerCard extends HTMLElement {
       };
     };
 
-    if (Array.isArray(config.tanks) && config.tanks.length) {
+    this._manualTankConfig = Array.isArray(config.tanks) && config.tanks.length > 0;
+    this._tankDiscoveryDone = this._manualTankConfig || config.auto_discover === false;
+    this._tankDiscoveryPromise = null;
+
+    if (this._manualTankConfig) {
       this._tankConfigs = config.tanks.map((tank, index) => normalizeTank(tank, `Aquarium ${index + 1}`));
     } else {
       this._tankConfigs = [normalizeTank(config, "Main Aquarium")];
@@ -53,6 +61,7 @@ class AquariumManagerCard extends HTMLElement {
     if (!this._config) return;
     if (!this._built) this._build();
     this._update();
+    this._ensureTankDiscovery();
   }
 
   disconnectedCallback() {
@@ -1099,6 +1108,48 @@ class AquariumManagerCard extends HTMLElement {
     } finally {
       button.disabled = false;
     }
+  }
+
+  async _ensureTankDiscovery() {
+    if (this._tankDiscoveryDone || this._manualTankConfig || !this._hass || this._tankDiscoveryPromise) return;
+    this._tankDiscoveryPromise = (async () => {
+      try {
+        const response = await this._callResponseService("list_aquariums", {});
+        const aquariums = Array.isArray(response?.aquariums) ? response.aquariums : [];
+        if (!aquariums.length) return;
+
+        const currentEntryId = this._config?.entry_id || "";
+        const currentName = this._config?.tank_name || "";
+        this._tankConfigs = aquariums.map((tank, index) => {
+          const tankName = tank?.tank_name || `Aquarium ${index + 1}`;
+          return {
+            entry_id: tank?.entry_id || "",
+            tank_name: tankName,
+            entity_prefix: tankName.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""),
+            entities: tank?.entities || {},
+            water_type: tank?.water_type || "",
+            tank_profile: tank?.tank_profile || "community",
+          };
+        });
+
+        let selected = this._tankConfigs.findIndex(tank => currentEntryId && tank.entry_id === currentEntryId);
+        if (selected < 0) selected = this._tankConfigs.findIndex(tank => tank.tank_name === currentName);
+        if (selected < 0) selected = 0;
+
+        this._activeTankIndex = selected;
+        this._config = { ...this._tankConfigs[selected] };
+        this._tankDiscoveryDone = true;
+        this._activeTab = "overview";
+        this._built = false;
+        this._build();
+        this._update();
+      } catch (err) {
+        console.warn("Aquarium Manager: tank discovery failed", err);
+      } finally {
+        this._tankDiscoveryPromise = null;
+      }
+    })();
+    await this._tankDiscoveryPromise;
   }
 
   _selectTank(index) {

@@ -74,6 +74,7 @@ SERVICE_UPDATE_LIGHTING_SCHEDULE = "update_lighting_schedule"
 SERVICE_START_WATER_TEST_TIMER = "start_water_test_timer"
 SERVICE_UPDATE_FILTER = "update_filter"
 SERVICE_MARK_FILTER_CLEANED = "mark_filter_cleaned"
+SERVICE_LIST_AQUARIUMS = "list_aquariums"
 
 ATTR_ENTRY_ID = "entry_id"
 ATTR_STOCK_ID = "stock_id"
