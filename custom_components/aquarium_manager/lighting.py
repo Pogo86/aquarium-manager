@@ -286,8 +286,8 @@ class AquariumLightingController:
             if now < schedule.start:
                 await self._async_switch_many(self.light_switches, False)
                 self.current_mode = None
-                self.status = "co2_precharge"
-                self.reason = "CO2 pre-charge before lights on"
+                self.status = "co2_precharge" if self.co2_switch else "off"
+                self.reason = "CO2 pre-charge before lights on" if self.co2_switch else "Waiting for lights-on time"
             elif now < schedule.dim_start:
                 await self._async_ensure_mode("full", force_sync=force_sync)
                 self.status = "full"
