@@ -111,7 +111,7 @@ class AquariumLightingController:
             self._unsubs.append(
                 async_track_state_change_event(
                     self.hass,
-                    [*self.light_switches, self.co2_switch],
+                    [*self.light_switches, *([self.co2_switch] if self.co2_switch else [])],
                     self._async_source_changed,
                 )
             )
@@ -123,7 +123,8 @@ class AquariumLightingController:
             unsub()
         self._unsubs.clear()
         if self.enabled and self.co2_switch:
-            await self._async_switch(self.co2_switch, False)
+            if self.co2_switch:
+                await self._async_switch(self.co2_switch, False)
 
     async def _async_interval(self, _now: datetime) -> None:
         await self.async_evaluate()
@@ -207,7 +208,7 @@ class AquariumLightingController:
 
     def _unavailable_entities(self) -> list[str]:
         unavailable: list[str] = []
-        for entity in [*self.light_switches, self.co2_switch]:
+        for entity in [*self.light_switches, *([self.co2_switch] if self.co2_switch else [])]:
             if not entity:
                 continue
             state = self.hass.states.get(entity)
@@ -227,10 +228,12 @@ class AquariumLightingController:
             if not self.enabled:
                 # Fail safe when automation is disabled from the dashboard/config:
                 # never leave scheduled CO2 running with no controller managing it.
-                if len(self.light_switches) == 2:
+                if self.light_switches:
                     await self._async_switch_many(self.light_switches, False)
                 if self.co2_switch:
-                    await self._async_switch(self.co2_switch, False)
+                    if self.co2_switch:
+                    if self.co2_switch:
+                await self._async_switch(self.co2_switch, False)
                 self.current_mode = None
                 self.status = "disabled"
                 self.reason = "Lighting automation disabled; lights and CO2 are off"
@@ -238,9 +241,9 @@ class AquariumLightingController:
                 self._notify()
                 return
 
-            if len(self.light_switches) != 2 or not self.co2_switch:
+            if not self.light_switches:
                 self.status = "not_configured"
-                self.reason = "Two light switches and one CO2 switch are required"
+                self.reason = "At least one light switch is required"
                 self._notify()
                 return
 
@@ -248,8 +251,10 @@ class AquariumLightingController:
             if unavailable:
                 # Never continue scheduled CO2 dosing when equipment state cannot
                 # be trusted. If the CO2 switch itself is still available, force it off.
-                if self.co2_switch not in unavailable:
-                    await self._async_switch(self.co2_switch, False)
+                if self.co2_switch and self.co2_switch not in unavailable:
+                    if self.co2_switch:
+                    if self.co2_switch:
+                await self._async_switch(self.co2_switch, False)
                 self.status = "equipment_unavailable"
                 self.reason = "Unavailable: " + ", ".join(unavailable)
                 self._notify()
@@ -257,6 +262,8 @@ class AquariumLightingController:
 
             if self._override_active(now):
                 await self._async_switch_many(self.light_switches, False)
+                if self.co2_switch:
+                    if self.co2_switch:
                 await self._async_switch(self.co2_switch, False)
                 self.current_mode = None
                 self.status = "day_off"
@@ -268,6 +275,8 @@ class AquariumLightingController:
             schedule = self._current_schedule(now)
             if schedule is None:
                 await self._async_switch_many(self.light_switches, False)
+                if self.co2_switch:
+                    if self.co2_switch:
                 await self._async_switch(self.co2_switch, False)
                 self.current_mode = None
                 self.status = "off"
@@ -277,7 +286,8 @@ class AquariumLightingController:
                 return
 
             co2_should_be_on = schedule.co2_on <= now < schedule.co2_off
-            await self._async_switch(self.co2_switch, co2_should_be_on)
+            if self.co2_switch:
+                await self._async_switch(self.co2_switch, co2_should_be_on)
 
             if now < schedule.start:
                 await self._async_switch_many(self.light_switches, False)
@@ -293,12 +303,16 @@ class AquariumLightingController:
                 self.status = "half"
                 self.reason = "End-of-day reduced light"
             elif now < schedule.blue_end:
+                if self.co2_switch:
+                    if self.co2_switch:
                 await self._async_switch(self.co2_switch, False)
                 await self._async_ensure_mode("blue", force_sync=force_sync)
                 self.status = "blue"
                 self.reason = "Blue-light viewing period"
             else:
                 await self._async_switch_many(self.light_switches, False)
+                if self.co2_switch:
+                    if self.co2_switch:
                 await self._async_switch(self.co2_switch, False)
                 self.current_mode = None
                 self.status = "off"
@@ -308,7 +322,7 @@ class AquariumLightingController:
             self._notify()
 
     def _lights_all_on(self) -> bool:
-        if len(self.light_switches) != 2:
+        if not self.light_switches:
             return False
         return all(
             (state := self.hass.states.get(entity)) is not None
