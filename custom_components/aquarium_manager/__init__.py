@@ -935,8 +935,12 @@ async def async_save_shared_github_settings(
     hass: HomeAssistant, url: str, token: str, *, exclude_entry_id: str = ""
 ) -> None:
     """Persist credentials once and reload other tank libraries."""
+    url, token = url.strip(), token.strip()
+    previous = await async_shared_github_settings(hass)
+    if previous == (url, token):
+        return
     store = Store(hass, SHARED_GITHUB_STORE_VERSION, SHARED_GITHUB_STORE_KEY)
-    await store.async_save({"url": url.strip(), "token": token.strip()})
+    await store.async_save({"url": url, "token": token})
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.entry_id != exclude_entry_id:
             hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
