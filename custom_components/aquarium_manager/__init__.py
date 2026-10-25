@@ -542,7 +542,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         controller = runtime.lighting_controller
         if controller is None:
             raise HomeAssistantError(
-                "Lighting is not configured. Select two light switches and a CO2 switch first."
+                "Lighting is not configured. Select at least one light switch first."
             )
 
         enabled = bool(call.data[CONF_LIGHTING_AUTOMATION_ENABLED])
