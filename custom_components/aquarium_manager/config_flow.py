@@ -227,7 +227,7 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
                 errors[CONF_LIGHTS_ON_TIME] = "invalid_time"
             elif any(entity and not entity.startswith("switch.") for entity in (light_1, light_2, co2_switch)):
                 errors[CONF_LIGHT_1_SWITCH] = "invalid_switch"
-            elif lighting_enabled and not (light_1 and light_2 and co2_switch):
+            elif lighting_enabled and not (light_1 or light_2):
                 errors[CONF_LIGHTING_AUTOMATION_ENABLED] = "lighting_switches_required"
             elif light_1 and light_2 and light_1 == light_2:
                 errors[CONF_LIGHT_2_SWITCH] = "lights_must_differ"
@@ -251,7 +251,7 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
         ) or DEFAULT_LIGHTS_ON_TIME
         current_lighting_enabled = bool(self.config_entry.options.get(
             CONF_LIGHTING_AUTOMATION_ENABLED,
-            DEFAULT_LIGHTING_AUTOMATION_ENABLED if (current_light_1 and current_light_2 and current_co2) else False,
+            DEFAULT_LIGHTING_AUTOMATION_ENABLED if (current_light_1 or current_light_2) else False,
         ))
         current_enabled = bool(self.config_entry.options.get(
             CONF_BACKUP_HEATER_AUTOMATION_ENABLED,
