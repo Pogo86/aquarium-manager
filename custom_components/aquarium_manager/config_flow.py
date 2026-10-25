@@ -197,7 +197,6 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
             backup_switch = str(user_input.get(CONF_BACKUP_HEATER_SWITCH, "") or "").strip()
             water_notify = str(user_input.get(CONF_WATER_TEST_NOTIFY_ENTITY, "") or "").strip()
             github_token = str(user_input.get(CONF_GITHUB_TOKEN, "") or "").strip()
-            user_input[CONF_GITHUB_TOKEN] = github_token
             light_1 = str(user_input.get(CONF_LIGHT_1_SWITCH, "") or "").strip()
             light_2 = str(user_input.get(CONF_LIGHT_2_SWITCH, "") or "").strip()
             co2_switch = str(user_input.get(CONF_CO2_SWITCH, "") or "").strip()
