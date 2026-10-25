@@ -910,16 +910,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def shared_github_settings(hass: HomeAssistant) -> tuple[str, str]:
+    """Read common GitHub settings from existing entries."""
+    entries = hass.config_entries.async_entries(DOMAIN)
+    url = next((str(e.options.get(CONF_SPECIES_LIBRARY_URL) or "").strip()
+                for e in entries if e.options.get(CONF_SPECIES_LIBRARY_URL)), "")
+    token = next((str(e.options.get(CONF_GITHUB_TOKEN) or "").strip()
+                  for e in entries if e.options.get(CONF_GITHUB_TOKEN)), "")
+    return url, token
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: AquariumManagerConfigEntry
 ) -> bool:
     """Set up Aquarium Manager from a config entry."""
-    library_url = str(entry.options.get(CONF_SPECIES_LIBRARY_URL, "") or "").strip()
+    library_url, shared_token = shared_github_settings(hass)
     runtime = AquariumRuntimeData(
         hass=hass,
         entry_id=entry.entry_id,
         library_url=library_url,
-        github_token=str(entry.options.get(CONF_GITHUB_TOKEN, "") or "").strip(),
+        github_token=shared_token,
         water_test_notify_entity=str(entry.options.get(CONF_WATER_TEST_NOTIFY_ENTITY, "") or "").strip(),
     )
     await runtime.async_load()
