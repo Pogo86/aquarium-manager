@@ -237,10 +237,17 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
                 errors[CONF_CO2_OFF_BEFORE_END_MIN] = "co2_off_exceeds_duration"
             else:
                 user_input[CONF_LIGHTS_ON_TIME] = lights_on_time
+                from . import async_save_shared_github_settings
+                await async_save_shared_github_settings(
+                    self.hass, library_url, github_token,
+                    exclude_entry_id=self.config_entry.entry_id,
+                )
+                user_input.pop(CONF_SPECIES_LIBRARY_URL, None)
+                user_input.pop(CONF_GITHUB_TOKEN, None)
                 return self.async_create_entry(data=dict(user_input))
 
-        from . import shared_github_settings
-        current_url, current_github_token = shared_github_settings(self.hass)
+        from . import async_shared_github_settings
+        current_url, current_github_token = await async_shared_github_settings(self.hass)
         current_backup_switch = str(self.config_entry.options.get(CONF_BACKUP_HEATER_SWITCH, "") or "")
         current_water_notify = str(self.config_entry.options.get(CONF_WATER_TEST_NOTIFY_ENTITY, "") or "")
         current_light_1 = str(self.config_entry.options.get(CONF_LIGHT_1_SWITCH, "") or "")
