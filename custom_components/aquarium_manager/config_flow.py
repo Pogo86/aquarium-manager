@@ -239,8 +239,8 @@ class AquariumManagerOptionsFlow(config_entries.OptionsFlowWithReload):
                 user_input[CONF_LIGHTS_ON_TIME] = lights_on_time
                 return self.async_create_entry(data=dict(user_input))
 
-        current_url = str(self.config_entry.options.get(CONF_SPECIES_LIBRARY_URL, "") or "")
-        current_github_token = str(self.config_entry.options.get(CONF_GITHUB_TOKEN, "") or "")
+        from . import shared_github_settings
+        current_url, current_github_token = shared_github_settings(self.hass)
         current_backup_switch = str(self.config_entry.options.get(CONF_BACKUP_HEATER_SWITCH, "") or "")
         current_water_notify = str(self.config_entry.options.get(CONF_WATER_TEST_NOTIFY_ENTITY, "") or "")
         current_light_1 = str(self.config_entry.options.get(CONF_LIGHT_1_SWITCH, "") or "")
